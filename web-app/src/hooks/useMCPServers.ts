@@ -7,6 +7,8 @@ export type MCPServerConfig = {
   args: string[]
   env: Record<string, string>
   active?: boolean
+  type?: 'http'
+  headers?: Record<string, string>
 }
 
 // Define the structure of all MCP servers

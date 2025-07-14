@@ -779,11 +779,27 @@ fn extract_command_args(
     let obj = config.as_object()?;
     let command = obj.get("command")?.as_str()?.to_string();
     let args = obj.get("args")?.as_array()?.clone();
-    let envs = obj
-        .get("env")
-        .unwrap_or(&Value::Object(serde_json::Map::new()))
-        .as_object()?
-        .clone();
+    
+    // Check if this is an HTTP transport server
+    let is_http = obj.get("type")
+        .and_then(|v| v.as_str())
+        .map(|s| s == "http")
+        .unwrap_or(false);
+    
+    let envs = if is_http {
+        // Use headers field for HTTP transport
+        obj.get("headers")
+            .unwrap_or(&Value::Object(serde_json::Map::new()))
+            .as_object()?
+            .clone()
+    } else {
+        // Use env field for stdio transport
+        obj.get("env")
+            .unwrap_or(&Value::Object(serde_json::Map::new()))
+            .as_object()?
+            .clone()
+    };
+    
     Some((command, args, envs))
 }
 

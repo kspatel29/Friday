@@ -8,6 +8,7 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { IconPlus, IconTrash, IconGripVertical } from '@tabler/icons-react'
 import { MCPServerConfig } from '@/hooks/useMCPServers'
 import { useTranslation } from '@/i18n/react-i18next-compat'
@@ -114,6 +115,9 @@ export default function AddEditMCPServer({
   const [args, setArgs] = useState<string[]>([''])
   const [envKeys, setEnvKeys] = useState<string[]>([''])
   const [envValues, setEnvValues] = useState<string[]>([''])
+  const [transport, setTransport] = useState<'stdio' | 'streamable-http'>(
+    'stdio'
+  )
 
   // Reset form when modal opens/closes or editing key changes
   useEffect(() => {
@@ -121,9 +125,19 @@ export default function AddEditMCPServer({
       setServerName(editingKey)
       setCommand(initialData.command)
       setArgs(initialData.args?.length > 0 ? initialData.args : [''])
+      // Set transport based on type field
+      setTransport(initialData.type === 'http' ? 'streamable-http' : 'stdio')
 
-      if (initialData.env) {
-        // Convert env object to arrays of keys and values
+      // Load env/headers based on transport type
+      if (initialData.type === 'http' && initialData.headers) {
+        // Convert headers object to arrays of keys and values
+        const keys = Object.keys(initialData.headers)
+        const values = keys.map((key) => initialData.headers![key])
+
+        setEnvKeys(keys.length > 0 ? keys : [''])
+        setEnvValues(values.length > 0 ? values : [''])
+      } else if (initialData.env) {
+        // Convert env object to arrays of keys and values for stdio
         const keys = Object.keys(initialData.env)
         const values = keys.map((key) => initialData.env[key])
 
@@ -142,6 +156,7 @@ export default function AddEditMCPServer({
     setArgs([''])
     setEnvKeys([''])
     setEnvValues([''])
+    setTransport('stdio')
   }
 
   const handleAddArg = () => {
@@ -202,12 +217,12 @@ export default function AddEditMCPServer({
   }
 
   const handleSave = () => {
-    // Convert env arrays to object
-    const envObj: Record<string, string> = {}
+    // Convert env/headers arrays to object
+    const keyValueObj: Record<string, string> = {}
     envKeys.forEach((key, index) => {
       const keyName = key.trim()
       if (keyName !== '') {
-        envObj[keyName] = envValues[index]?.trim() || ''
+        keyValueObj[keyName] = envValues[index]?.trim() || ''
       }
     })
 
@@ -217,7 +232,13 @@ export default function AddEditMCPServer({
     const config: MCPServerConfig = {
       command: command.trim(),
       args: filteredArgs,
-      env: envObj,
+      env: transport === 'stdio' ? keyValueObj : {},
+    }
+
+    // Add type and headers for http transport
+    if (transport === 'streamable-http') {
+      config.type = 'http'
+      config.headers = keyValueObj
     }
 
     if (serverName.trim() !== '') {
@@ -251,63 +272,97 @@ export default function AddEditMCPServer({
           </div>
 
           <div className="space-y-2">
+            <label className="text-sm mb-2 inline-block">Transport Type</label>
+            <RadioGroup
+              value={transport}
+              onValueChange={(value) => setTransport(value as 'stdio' | 'streamable-http')}
+              className="flex gap-8"
+            >
+              <div className="flex items-center gap-2">
+                <RadioGroupItem value="stdio" id="stdio" className="w-5 h-5" />
+                <label htmlFor="stdio" className="text-sm cursor-pointer">
+                  Stdio
+                </label>
+              </div>
+              <div className="flex items-center gap-2">
+                <RadioGroupItem value="streamable-http" id="streamable-http" className="w-5 h-5" />
+                <label htmlFor="streamable-http" className="text-sm cursor-pointer">
+                  Streamable HTTP
+                </label>
+              </div>
+            </RadioGroup>
+          </div>
+
+          <div className="space-y-2">
             <label className="text-sm mb-2 inline-block">
-              {t('mcp-servers:command')}
+              {transport === 'streamable-http'
+                ? 'URL'
+                : t('mcp-servers:command')}
             </label>
             <Input
               value={command}
               onChange={(e) => setCommand(e.target.value)}
-              placeholder={t('mcp-servers:enterCommand')}
+              placeholder={
+                transport === 'streamable-http'
+                  ? 'Enter URL'
+                  : t('mcp-servers:enterCommand')
+              }
             />
           </div>
 
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <label className="text-sm">{t('mcp-servers:arguments')}</label>
-              <div
-                className="size-6 cursor-pointer flex items-center justify-center rounded hover:bg-main-view-fg/10 transition-all duration-200 ease-in-out"
-                onClick={handleAddArg}
-              >
-                <IconPlus size={18} className="text-main-view-fg/60" />
+          {transport === 'stdio' && (
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="text-sm">{t('mcp-servers:arguments')}</label>
+                <div
+                  className="size-6 cursor-pointer flex items-center justify-center rounded hover:bg-main-view-fg/10 transition-all duration-200 ease-in-out"
+                  onClick={handleAddArg}
+                >
+                  <IconPlus size={18} className="text-main-view-fg/60" />
+                </div>
               </div>
-            </div>
 
-            <DndContext
-              sensors={sensors}
-              collisionDetection={closestCenter}
-              onDragEnd={(event) => {
-                const { active, over } = event
-                if (active.id !== over?.id) {
-                  const oldIndex = parseInt(active.id.toString())
-                  const newIndex = parseInt(over?.id.toString() || '0')
-                  handleReorderArgs(oldIndex, newIndex)
-                }
-              }}
-            >
-              <SortableContext
-                items={args.map((_, index) => index)}
-                strategy={verticalListSortingStrategy}
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragEnd={(event) => {
+                  const { active, over } = event
+                  if (active.id !== over?.id) {
+                    const oldIndex = parseInt(active.id.toString())
+                    const newIndex = parseInt(over?.id.toString() || '0')
+                    handleReorderArgs(oldIndex, newIndex)
+                  }
+                }}
               >
-                {args.map((arg, index) => (
-                  <SortableArgItem
-                    key={index}
-                    id={index}
-                    value={arg}
-                    onChange={(value) => handleArgChange(index, value)}
-                    onRemove={() => handleRemoveArg(index)}
-                    canRemove={args.length > 1}
-                    placeholder={t('mcp-servers:argument', {
-                      index: index + 1,
-                    })}
-                  />
-                ))}
-              </SortableContext>
-            </DndContext>
-          </div>
+                <SortableContext
+                  items={args.map((_, index) => index)}
+                  strategy={verticalListSortingStrategy}
+                >
+                  {args.map((arg, index) => (
+                    <SortableArgItem
+                      key={index}
+                      id={index}
+                      value={arg}
+                      onChange={(value) => handleArgChange(index, value)}
+                      onRemove={() => handleRemoveArg(index)}
+                      canRemove={args.length > 1}
+                      placeholder={t('mcp-servers:argument', {
+                        index: index + 1,
+                      })}
+                    />
+                  ))}
+                </SortableContext>
+              </DndContext>
+            </div>
+          )}
 
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <label className="text-sm">{t('mcp-servers:envVars')}</label>
+              <label className="text-sm">
+                {transport === 'streamable-http'
+                  ? 'Headers'
+                  : t('mcp-servers:envVars')}
+              </label>
               <div
                 className="size-6 cursor-pointer flex items-center justify-center rounded hover:bg-main-view-fg/10 transition-all duration-200 ease-in-out"
                 onClick={handleAddEnv}
@@ -321,13 +376,21 @@ export default function AddEditMCPServer({
                 <Input
                   value={key}
                   onChange={(e) => handleEnvKeyChange(index, e.target.value)}
-                  placeholder={t('mcp-servers:key')}
+                  placeholder={
+                    transport === 'streamable-http'
+                      ? 'Header Name'
+                      : t('mcp-servers:key')
+                  }
                   className="flex-1"
                 />
                 <Input
                   value={envValues[index] || ''}
                   onChange={(e) => handleEnvValueChange(index, e.target.value)}
-                  placeholder={t('mcp-servers:value')}
+                  placeholder={
+                    transport === 'streamable-http'
+                      ? 'Header Value'
+                      : t('mcp-servers:value')
+                  }
                   className="flex-1"
                 />
                 {envKeys.length > 1 && (
