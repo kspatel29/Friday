@@ -1,15 +1,18 @@
 {
   "bundle": {
     "targets": ["deb", "appimage"],
-    "resources": ["resources/LICENSE", "resources/pre-install/**/*"],
+    "resources": ["resources/pre-install/**/*"],
     "externalBin": ["resources/bin/uv"],
     "linux": {
       "appimage": {
         "bundleMediaFramework": false,
-        "files": {}
+        "files": {
+          "LICENSE": "resources/LICENSE"
+        }
       },
       "deb": {
         "files": {
+          "LICENSE": "resources/LICENSE",
           "usr/bin/bun": "resources/bin/bun",
           "usr/lib/Jan/resources/lib/libvulkan.so": "resources/lib/libvulkan.so"
         }

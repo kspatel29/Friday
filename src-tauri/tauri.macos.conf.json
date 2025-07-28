@@ -1,7 +1,12 @@
 {
   "bundle": {
     "targets": ["app", "dmg"],
-    "resources": ["resources/LICENSE", "resources/pre-install/**/*"],
-    "externalBin": ["resources/bin/bun", "resources/bin/uv"]
+    "resources": ["resources/pre-install/**/*"],
+    "externalBin": ["resources/bin/bun", "resources/bin/uv"],
+    "macOS": {
+      "files": {
+        "LICENSE": "resources/LICENSE"
+      }
+    }
   }
 }

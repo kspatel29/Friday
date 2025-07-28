@@ -698,7 +698,6 @@ Section Install
     CreateDirectory "$INSTDIR\resources\pre-install"
     SetOutPath $INSTDIR
     File /a "/oname=vulkan-1.dll" "D:\a\jan\jan\src-tauri\resources\lib\vulkan-1.dll"
-    SetOutPath "$INSTDIR\resources"
     File /a "/oname=LICENSE" "D:\a\jan\jan\src-tauri\resources\LICENSE"
     SetOutPath "$INSTDIR\resources\pre-install"
     File /nonfatal /a /r "D:\a\jan\jan\src-tauri\resources\pre-install\"
@@ -823,8 +822,10 @@ Section Uninstall
   ; Copy main executable
   Delete "$INSTDIR\${MAINBINARYNAME}.exe"
 
+  ; Delete LICENSE file
+    Delete "$INSTDIR\LICENSE"
+
   ; Delete resources
-    Delete "$INSTDIR\resources\LICENSE"
     Delete "$INSTDIR\resources\pre-install\janhq-assistant-extension-1.0.2.tgz"
     Delete "$INSTDIR\resources\pre-install\janhq-conversational-extension-1.0.0.tgz"
     Delete "$INSTDIR\resources\pre-install\janhq-engine-management-extension-1.0.3.tgz"
