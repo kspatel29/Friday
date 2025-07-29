@@ -1,5 +1,5 @@
 prompt = """
-You are going to test the Jan application by downloading and chatting with a model (bitcpm4).
+You are going to test the Jan application by downloading and chatting with a model (qwen3-0.6B).
 
 Step-by-step instructions:
 1. Given the Jan application is already opened.

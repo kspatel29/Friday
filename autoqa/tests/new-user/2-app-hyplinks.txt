@@ -1,0 +1,17 @@
+prompt = """
+You are going to test the Jan application by downloading and chatting with a model (qwen3-0.6B).
+
+Step-by-step instructions:
+1. Given the Jan application is already opened.
+2. In the **bottom-left corner**, click the **Settings** menu item.
+3. In the right side there will be many settings, scroll to bottom to see Resources
+8. Click Github icon and verify if it redirects user to the correct page (it should be menloresearch/jan github repository)
+9. Close the browser to go back to the app
+10. Click Discord and verify if it open Menlo Research server (don't click Accept)
+11. Close the browser to go back to the app
+12. Click Report Issue to see if it opens github page
+13. Close the browser to go back to the app
+If the model responds correctly, return: {"result": True}, otherwise return: {"result": False}.
+
+In all your responses, use only plain ASCII characters. Do NOT use Unicode symbols
+"""
