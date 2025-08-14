@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <component type="desktop-application">
-  <id>ai.menlo.jan</id>
+  <id>ai.gamewave.Friday</id>
   <metadata_license>FSFAP</metadata_license>
   <project_license>AGPL-3.0-only</project_license>
-  <name>Jan</name>
+  <name>Friday</name>
   <summary>Local AI Assistant that runs 100% offline on your device</summary>
   
   <description>
     <p>
-      Jan is a ChatGPT-alternative that runs 100% offline on your device. Our goal is to make it easy for anyone to download and run LLMs and use AI with full control and privacy.
+      Ultimate Local AI Assistant that takes actions for you. Our goal is to make your life easy and let your assistant do all work accurately for you.
     </p>
     <p>Features:</p>
     <ul>
@@ -19,7 +19,7 @@
     </ul>
   </description>
   
-  <launchable type="desktop-id">ai.menlo.jan.desktop</launchable>
+  <launchable type="desktop-id">ai.gamewave.friday.desktop</launchable>
   
   <screenshots>
     <screenshot type="default">
@@ -27,15 +27,15 @@
     </screenshot>
   </screenshots>
   
-  <url type="homepage">https://jan.ai/</url>
-  <url type="bugtracker">https://github.com/menloresearch/jan/issues</url>
+  <url type="homepage">https://gamewave.dev/</url>
+  <url type="bugtracker">https://github.com/kspatel29/Friday/issues</url>
   
   <content_rating type="oars-1.1" />
   
   <releases>
     <release version="0.5.12" date="2024-01-02">
       <description>
-        <p>Latest stable release of Jan AI</p>
+        <p>Latest stable release of Friday AI</p>
       </description>
     </release>
   </releases>

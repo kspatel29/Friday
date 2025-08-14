@@ -19,7 +19,7 @@ export const useGeneralSetting = create<LeftPanelStoreState>()(
     (set) => ({
       currentLanguage: 'en',
       spellCheckChatInput: true,
-      experimentalFeatures: false,
+      experimentalFeatures: true,
       huggingfaceToken: undefined,
       setExperimentalFeatures: (value) => set({ experimentalFeatures: value }),
       setSpellCheckChatInput: (value) => set({ spellCheckChatInput: value }),

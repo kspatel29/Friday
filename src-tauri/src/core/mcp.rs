@@ -18,39 +18,51 @@ use super::{
 
 const DEFAULT_MCP_CONFIG: &str = r#"{
   "mcpServers": {
-    "browsermcp": {
-      "command": "npx",
-      "args": ["@browsermcp/mcp"],
-      "env": {},
-      "active": false
-    },
+    // "browsermcp": {
+    //   "command": "npx",
+    //   "args": ["@browsermcp/mcp"],
+    //   "env": {},
+    //   "active": false
+    // },
     "fetch": {
       "command": "uvx",
       "args": ["mcp-server-fetch"],
       "env": {},
-      "active": false
+      "active": true
     },
-    "serper": {
-      "command": "npx",
-      "args": ["-y", "serper-search-scrape-mcp-server"],
-      "env": { "SERPER_API_KEY": "YOUR_SERPER_API_KEY_HERE" },
-      "active": false
-    },
-    "filesystem": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "@modelcontextprotocol/server-filesystem",
-        "/path/to/other/allowed/dir"
-      ],
-      "env": {},
-      "active": false
-    },
+    // "serper": {
+    //   "command": "npx",
+    //   "args": ["-y", "serper-search-scrape-mcp-server"],
+    //   "env": { "SERPER_API_KEY": "YOUR_SERPER_API_KEY_HERE" },
+    //   "active": false
+    // },
+    // "filesystem": {
+    //   "command": "npx",
+    //   "args": [
+    //     "-y",
+    //     "@modelcontextprotocol/server-filesystem",
+    //     "/path/to/other/allowed/dir"
+    //   ],
+    //   "env": {},
+    //   "active": false
+    // },
     "sequential-thinking": {
       "command": "npx",
       "args": ["-y", "@modelcontextprotocol/server-sequential-thinking"],
       "env": {},
       "active": false
+    },
+    "blender-mcp": {
+      "command": "uvx",
+      "args": ["blender-mcp"],
+      "env": {},
+      "active": true
+    },
+    "unreal-mcp": {
+      "command": "uvx",
+      "args": ["--from", "gamewave-unreal-mcp", "unreal-mcp"],
+      "env": {},
+      "active": true
     }
   }
 }

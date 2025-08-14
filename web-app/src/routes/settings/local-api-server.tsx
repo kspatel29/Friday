@@ -119,7 +119,7 @@ function LocalAPIServer() {
           windowKey.logsWindowLocalApiServer,
           {
             url: route.localApiServerlogs,
-            title: 'Local API server Logs - Jan',
+            title: 'Local API server Logs - Friday',
             width: 800,
             height: 600,
             resizable: true,

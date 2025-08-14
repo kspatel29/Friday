@@ -117,7 +117,7 @@ function Hardware() {
         // Create a new system monitor window
         const monitorWindow = new WebviewWindow(windowKey.systemMonitorWindow, {
           url: route.systemMonitor,
-          title: 'System Monitor - Jan',
+          title: 'System Monitor - Friday',
           width: 900,
           height: 600,
           resizable: true,

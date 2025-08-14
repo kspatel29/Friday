@@ -1,8 +1,8 @@
 [Desktop Entry]
-Name=Jan
-Comment=Local AI Assistant that runs 100% offline
+Name=Friday
+Comment=Ultimate Local AI Assistant that takes actions for you.
 Exec=run.sh
-Icon=ai.menlo.jan
+Icon=ai.gamewave.friday
 Type=Application
 Categories=Development;
 Keywords=AI;Assistant;LLM;ChatGPT;Local;Offline;

@@ -66,7 +66,7 @@ export const getJanDataFolder = async (): Promise<string | undefined> => {
 
     return appConfiguration?.data_folder
   } catch (error) {
-    console.error('Failed to get Jan data folder:', error)
+    console.error('Failed to get Friday data folder:', error)
     return undefined
   }
 }
