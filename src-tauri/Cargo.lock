@@ -8,6 +8,7 @@ version = "0.6.599"
 dependencies = [
  "ash",
  "base64 0.22.1",
+ "byteorder",
  "dirs",
  "env",
  "fix-path-env",

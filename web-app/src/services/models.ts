@@ -1,3 +1,4 @@
+import { sanitizeModelId } from '@/lib/utils'
 import {
   AIEngine,
   EngineManager,
@@ -12,6 +13,12 @@ export interface ModelQuant {
   file_size: string
 }
 
+export interface MMProjModel {
+  model_id: string
+  path: string
+  file_size: string
+}
+
 export interface CatalogModel {
   model_name: string
   description: string
@@ -19,6 +26,7 @@ export interface CatalogModel {
   downloads: number
   num_quants: number
   quants: ModelQuant[]
+  mmproj_models?: MMProjModel[]
   created_at?: string
   readme?: string
 }
@@ -165,7 +173,7 @@ export const convertHfRepoToCatalogModel = (
     const modelId = file.rfilename.replace(/\.gguf$/i, '')
 
     return {
-      model_id: modelId,
+      model_id: sanitizeModelId(modelId),
       path: `https://huggingface.co/${repo.modelId}/resolve/main/${file.rfilename}`,
       file_size: formatFileSize(file.size),
     }
@@ -201,9 +209,14 @@ export const updateModel = async (
  * @param model The model to pull.
  * @returns A promise that resolves when the model download task is created.
  */
-export const pullModel = async (id: string, modelPath: string) => {
+export const pullModel = async (
+  id: string,
+  modelPath: string,
+  mmprojPath?: string
+) => {
   return getEngine()?.import(id, {
     modelPath,
+    mmprojPath,
   })
 }
 
