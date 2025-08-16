@@ -3,8 +3,8 @@
 version = 3
 
 [[package]]
-name = "Jan"
-version = "0.6.599"
+name = "Friday"
+version = "0.5.1"
 dependencies = [
  "ash",
  "base64 0.22.1",

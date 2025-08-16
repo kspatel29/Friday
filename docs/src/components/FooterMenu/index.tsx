@@ -10,28 +10,28 @@ import { FaLinkedin } from 'react-icons/fa'
 import posthog from 'posthog-js'
 
 const socials = [
-  {
-    icon: (
-      <RiTwitterXFill className="text-lg text-black/60 dark:text-white/60" />
-    ),
-    href: 'https://twitter.com/jandotai',
-  },
+  // {
+  //   icon: (
+  //     <RiTwitterXFill className="text-lg text-black/60 dark:text-white/60" />
+  //   ),
+  //   href: 'https://twitter.com/jandotai',
+  // },
   {
     icon: (
       <BiLogoDiscordAlt className="text-xl text-black/60 dark:text-white/60" />
     ),
-    href: 'https://discord.com/invite/FTk2MvZwJH',
+    href: 'https://discord.gg/eK2S5Kexru',
   },
   {
     icon: (
       <AiOutlineGithub className="text-lg text-black/60 dark:text-white/60" />
     ),
-    href: 'https://github.com/menloresearch/jan',
+    href: 'https://github.com/kspatel29/Friday',
   },
-  {
-    icon: <FaLinkedin className="text-lg text-black/60 dark:text-white/60" />,
-    href: 'https://www.linkedin.com/company/homebrewltd',
-  },
+  // {
+  //   icon: <FaLinkedin className="text-lg text-black/60 dark:text-white/60" />,
+  //   href: 'https://www.linkedin.com/company/homebrewltd',
+  // },
 ]
 
 const menus = [
@@ -62,24 +62,24 @@ const menus = [
     child: [
       {
         menu: 'Github',
-        path: 'https://github.com/menloresearch/jan',
+        path: 'https://github.com/kspatel29/Friday',
         external: true,
       },
       {
         menu: 'Discord',
-        path: 'https://discord.gg/FTk2MvZwJH',
+        path: 'https://discord.gg/eK2S5Kexru',
         external: true,
       },
-      {
-        menu: 'X/Twitter',
-        path: 'https://twitter.com/jandotai',
-        external: true,
-      },
-      {
-        menu: 'LinkedIn',
-        path: 'https://www.linkedin.com/company/menloresearch',
-        external: true,
-      },
+      // {
+      //   menu: 'X/Twitter',
+      //   path: 'https://twitter.com/jandotai',
+      //   external: true,
+      // },
+      // {
+      //   menu: 'LinkedIn',
+      //   path: 'https://www.linkedin.com/company/menloresearch',
+      //   external: true,
+      // },
     ],
   },
   {
@@ -87,7 +87,7 @@ const menus = [
     child: [
       {
         menu: 'Menlo',
-        path: 'https://menlo.ai',
+        path: 'https://gamewave.dev',
       },
       {
         menu: 'Blog',
@@ -95,7 +95,7 @@ const menus = [
       },
       {
         menu: 'Careers',
-        path: 'https://menlo.bamboohr.com/careers',
+        path: 'https://gamewave.dev/careers',
         external: true,
       },
     ],

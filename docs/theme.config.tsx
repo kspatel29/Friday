@@ -10,7 +10,7 @@ import { AiOutlineGithub } from 'react-icons/ai'
 import { BiLogoDiscordAlt } from 'react-icons/bi'
 import { RiTwitterXFill } from 'react-icons/ri'
 
-const defaultUrl = 'https://jan.ai'
+const defaultUrl = 'https://gamewave.dev'
 const defaultImage = 'https://jan.ai/assets/images/general/og-image.png'
 
 const structuredData = {
@@ -30,7 +30,7 @@ const config: DocsThemeConfig = {
       </div>
     </span>
   ),
-  docsRepositoryBase: 'https://github.com/menloresearch/jan/tree/dev/docs',
+  docsRepositoryBase: 'https://github.com/kspatel29/Friday/tree/dev/docs',
   feedback: {
     content: 'Question? Give us feedback →',
     labels: 'feedback',

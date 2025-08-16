@@ -178,7 +178,7 @@
     "verboseLogsDesc": "Enable detailed server logs for debugging."
   },
   "privacy": {
-    "analytics": "Analytics",
+    "analytics": "Analytics(Beta)",
     "helpUsImprove": "Help us improve",
     "helpUsImproveDesc": "To help us improve Friday, you can share anonymous data like feature usage and user counts. We never collect your chats or personal information.",
     "privacyPolicy": "You have full control over your data. Learn more in our Privacy Policy.",

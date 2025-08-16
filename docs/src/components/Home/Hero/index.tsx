@@ -80,7 +80,7 @@ const Hero = () => {
           </div>
 
           <p className="text-xl -mt-1 leading-relaxed text-black/60 dark:text-white/60">
-            Jan is an open source ChatGPT-alternative that runs 100% offline.
+            Friday is an open source AI assistant whose only goal is take accurate actions on your behalf, build games, simulations, fill out excel sheet and much more.
           </p>
         </div>
         <div className="mb-4 mt-8">

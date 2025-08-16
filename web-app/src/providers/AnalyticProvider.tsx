@@ -17,9 +17,9 @@ export function AnalyticProvider() {
     if (productAnalytic) {
       posthog.init(POSTHOG_KEY, {
         api_host: POSTHOG_HOST,
-        autocapture: false,
-        capture_pageview: false,
-        capture_pageleave: false,
+        autocapture: true,
+        capture_pageview: true,
+        capture_pageleave: true,
         disable_session_recording: true,
         person_profiles: 'always',
         persistence: 'localStorage',

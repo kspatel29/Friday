@@ -18,39 +18,17 @@ use super::{
 
 const DEFAULT_MCP_CONFIG: &str = r#"{
   "mcpServers": {
-    // "browsermcp": {
-    //   "command": "npx",
-    //   "args": ["@browsermcp/mcp"],
-    //   "env": {},
-    //   "active": false
-    // },
     "fetch": {
       "command": "uvx",
       "args": ["mcp-server-fetch"],
       "env": {},
       "active": true
     },
-    // "serper": {
-    //   "command": "npx",
-    //   "args": ["-y", "serper-search-scrape-mcp-server"],
-    //   "env": { "SERPER_API_KEY": "YOUR_SERPER_API_KEY_HERE" },
-    //   "active": false
-    // },
-    // "filesystem": {
-    //   "command": "npx",
-    //   "args": [
-    //     "-y",
-    //     "@modelcontextprotocol/server-filesystem",
-    //     "/path/to/other/allowed/dir"
-    //   ],
-    //   "env": {},
-    //   "active": false
-    // },
-    "sequential-thinking": {
+    "agentic-tools": {
       "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-sequential-thinking"],
-      "env": {},
-      "active": false
+      "args": ["-y", "@pimzino/agentic-tools-mcp", "--claude"],
+      "env" : {},
+      "active": true
     },
     "blender-mcp": {
       "command": "uvx",

@@ -2,11 +2,11 @@ import { createFileRoute } from '@tanstack/react-router'
 import { route } from '@/constants/routes'
 import SettingsMenu from '@/containers/SettingsMenu'
 import HeaderPage from '@/containers/HeaderPage'
-import { Switch } from '@/components/ui/switch'
+
 import { Card, CardItem } from '@/containers/Card'
 import { useTranslation } from '@/i18n/react-i18next-compat'
-import { useAnalytic } from '@/hooks/useAnalytic'
-import posthog from 'posthog-js'
+// import { useAnalytic } from '@/hooks/useAnalytic'
+// import posthog from 'posthog-js'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const Route = createFileRoute(route.settings.privacy as any)({
@@ -15,7 +15,7 @@ export const Route = createFileRoute(route.settings.privacy as any)({
 
 function Privacy() {
   const { t } = useTranslation()
-  const { setProductAnalytic, productAnalytic } = useAnalytic()
+  // const { setProductAnalytic } = useAnalytic()
 
   return (
     <div className="flex flex-col h-full">
@@ -33,17 +33,20 @@ function Privacy() {
                     {t('settings:privacy.analytics')}
                   </h1>
                   <div className="flex items-center gap-2">
-                    <Switch
-                      checked={productAnalytic}
-                      onCheckedChange={(state) => {
-                        if (state) {
-                          posthog.opt_in_capturing()
-                        } else {
-                          posthog.opt_out_capturing()
-                        }
-                        setProductAnalytic(state)
-                      }}
-                    />
+                    {/* <Switch
+                        checked={productAnalytic}
+                        onCheckedChange={(state) => {
+                          if (state) {
+                            posthog.opt_in_capturing()
+                          } else {
+                            posthog.opt_out_capturing()
+                          }
+                          setProductAnalytic(state)
+                        }}
+                      /> */}
+                    <span className="text-sm text-main-view-fg/70 bg-gray-900 dark:bg-gray-900/30 px-2 py-1 rounded">
+                      Beta - Always Enabled
+                    </span>
                   </div>
                 </div>
               }

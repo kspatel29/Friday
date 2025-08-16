@@ -549,7 +549,7 @@ function General() {
                 description={t('settings:general.releaseNotesDesc')}
                 actions={
                   <a
-                    href="https://github.com/menloresearch/jan/releases"
+                    href="https://github.com/kspatel29/Friday/releases"
                     target="_blank"
                     rel="noopener noreferrer"
                   >
@@ -569,7 +569,7 @@ function General() {
                 description={t('settings:general.githubDesc')}
                 actions={
                   <a
-                    href="https://github.com/menloresearch/jan"
+                    href="https://github.com/kspatel29/Friday"
                     target="_blank"
                     rel="noopener noreferrer"
                   >
@@ -587,7 +587,7 @@ function General() {
                 description={t('settings:general.discordDesc')}
                 actions={
                   <a
-                    href="https://discord.com/invite/FTk2MvZwJH"
+                    href="https://discord.gg/eK2S5Kexru"
                     target="_blank"
                     rel="noopener noreferrer"
                   >
@@ -609,7 +609,7 @@ function General() {
                 description={t('settings:general.reportAnIssueDesc')}
                 actions={
                   <a
-                    href="https://github.com/menloresearch/jan/issues/new"
+                    href="https://github.com/kspatel29/Friday/issues/new"
                     target="_blank"
                   >
                     <div className="flex items-center gap-1">
