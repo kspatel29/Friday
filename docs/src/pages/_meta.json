@@ -9,12 +9,13 @@
   },
   "docs": {
     "type": "page",
-    "title": "Documentation"
-  },
-  "cortex": {
-    "type": "page",
-    "title": "Cortex",
+    "title": "Docs",
     "display": "hidden"
+  },
+  "Documentation": {
+    "type": "page",
+    "title": "Documentation",
+    "href": "https://docs.jan.ai"
   },
   "platforms": {
     "type": "page",

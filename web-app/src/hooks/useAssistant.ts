@@ -35,11 +35,11 @@ const setLastUsedAssistantId = (assistantId: string) => {
 }
 
 export const defaultAssistant: Assistant = {
-  id: 'jan',
-  name: 'Jan',
+  id: 'Friday',
+  name: 'Friday',
   created_at: 1747029866.542,
   parameters: {},
-  avatar: '👋',
+  avatar: '🎮',
   description:
     'Friday is an expert in game development that will save you some serious time and boost your productivity 10 folds.',
   instructions:
