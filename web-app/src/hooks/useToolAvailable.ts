@@ -2,6 +2,8 @@ import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
 import { localStorageKey } from '@/constants/localStorage'
 import { MCPTool } from '@/types/completion'
+import { useAssistant } from './useAssistant'
+import { useAppState } from './useAppState'
 
 type ToolDisabledState = {
   // Track disabled tools per thread
@@ -16,6 +18,7 @@ type ToolDisabledState = {
     available: boolean
   ) => void
   isToolDisabled: (threadId: string, toolName: string) => boolean
+  isToolLocked: (threadId: string, toolName: string) => boolean
   getDisabledToolsForThread: (threadId: string) => string[]
   setDefaultDisabledTools: (toolNames: string[]) => void
   getDefaultDisabledTools: () => string[]
@@ -34,6 +37,15 @@ export const useToolAvailable = create<ToolDisabledState>()(
         toolName: string,
         available: boolean
       ) => {
+        // Check if tool configuration is locked by assistant
+        const assistantState = useAssistant.getState()
+        const currentAssistant = assistantState.currentAssistant
+        
+        if (currentAssistant?.lockToolConfiguration) {
+          console.warn(`Tool configuration is locked by assistant: ${currentAssistant.name}`)
+          return
+        }
+
         set((state) => {
           const currentTools = state.disabledTools[threadId] || []
           let updatedTools: string[]
@@ -56,17 +68,49 @@ export const useToolAvailable = create<ToolDisabledState>()(
       },
 
       isToolDisabled: (threadId: string, toolName: string) => {
+        const assistantState = useAssistant.getState()
+        const currentAssistant = assistantState.currentAssistant
+        
+        // If assistant has locked tool configuration, use that
+        if (currentAssistant?.lockToolConfiguration && currentAssistant?.enabledMCPTools) {
+          // Tool is disabled if it's NOT in the enabled list
+          return !currentAssistant.enabledMCPTools.includes(toolName)
+        }
+        
+        // Normal behavior when not locked
         const state = get()
-        // If no thread-specific settings, use default
         if (!state.disabledTools[threadId]) {
           return state.defaultDisabledTools.includes(toolName)
         }
         return state.disabledTools[threadId]?.includes(toolName) || false
       },
 
+      isToolLocked: (_threadId: string, _toolName: string) => {
+        const assistantState = useAssistant.getState()
+        const currentAssistant = assistantState.currentAssistant
+        
+        // If assistant has lockToolConfiguration set to true, all tools are locked
+        return currentAssistant?.lockToolConfiguration === true
+      },
+
       getDisabledToolsForThread: (threadId: string) => {
+        const assistantState = useAssistant.getState()
+        const currentAssistant = assistantState.currentAssistant
+        
+        // If assistant has locked tool configuration, calculate disabled tools from enabled list
+        if (currentAssistant?.lockToolConfiguration && currentAssistant?.enabledMCPTools) {
+          // Get all available tools to determine which ones are not enabled
+          const { tools } = useAppState.getState()
+          
+          const disabledTools = tools
+            .filter(tool => !currentAssistant.enabledMCPTools!.includes(tool.name))
+            .map(tool => tool.name)
+          
+          return disabledTools
+        }
+        
+        // Normal behavior when not locked
         const state = get()
-        // If no thread-specific settings, use default
         if (!state.disabledTools[threadId]) {
           return state.defaultDisabledTools
         }
@@ -82,6 +126,14 @@ export const useToolAvailable = create<ToolDisabledState>()(
       },
 
       initializeThreadTools: (threadId: string, allTools: MCPTool[]) => {
+        const assistantState = useAssistant.getState()
+        const currentAssistant = assistantState.currentAssistant
+        
+        // If assistant has locked tool configuration, don't initialize thread-specific settings
+        if (currentAssistant?.lockToolConfiguration) {
+          return
+        }
+        
         const state = get()
         // If thread already has settings, don't override
         if (state.disabledTools[threadId]) {
@@ -89,7 +141,6 @@ export const useToolAvailable = create<ToolDisabledState>()(
         }
 
         // Initialize with default tools only
-        // Don't auto-enable all tools if defaults are explicitly empty
         const initialTools = state.defaultDisabledTools.filter((toolName) =>
           allTools.some((tool) => tool.name === toolName)
         )

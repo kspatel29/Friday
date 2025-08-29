@@ -8,39 +8,29 @@ pub const MCP_BACKOFF_MULTIPLIER: f64 = 2.0; // Double the delay each time
 
 pub const DEFAULT_MCP_CONFIG: &str = r#"{
   "mcpServers": {
-    "browsermcp": {
-      "command": "npx",
-      "args": ["@browsermcp/mcp"],
-      "env": {},
-      "active": false
-    },
     "fetch": {
       "command": "uvx",
       "args": ["mcp-server-fetch"],
       "env": {},
-      "active": false
+      "active": true
     },
-    "serper": {
+    "agentic-tools": {
       "command": "npx",
-      "args": ["-y", "serper-search-scrape-mcp-server"],
-      "env": { "SERPER_API_KEY": "YOUR_SERPER_API_KEY_HERE" },
-      "active": false
+      "args": ["-y", "@pimzino/agentic-tools-mcp", "--claude"],
+      "env" : {},
+      "active": true
     },
-    "filesystem": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "@modelcontextprotocol/server-filesystem",
-        "/path/to/other/allowed/dir"
-      ],
+    "blender-mcp": {
+      "command": "uvx",
+      "args": ["blender-mcp"],
       "env": {},
-      "active": false
+      "active": true
     },
-    "sequential-thinking": {
-      "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-sequential-thinking"],
+    "unreal-mcp": {
+      "command": "uvx",
+      "args": ["--from", "gamewave-unreal-mcp", "unreal-mcp"],
       "env": {},
-      "active": false
+      "active": true
     }
   }
 }"#;

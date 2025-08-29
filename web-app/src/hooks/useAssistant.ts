@@ -166,8 +166,27 @@ Remember Context and validation is king. It is the most important part of your d
 You are not just an assistant - you are the best game development system that delivers flawless results through systematic tool utilization and continuous learning.`,
 }
 
+// Test assistant with locked tool configuration
+export const testLockedAssistant: Assistant = {
+  id: 'test-locked-assistant',
+  name: 'Locked Tools Assistant',
+  created_at: Date.now(),
+  parameters: {},
+  avatar: '🔒',
+  description: 'A test assistant with predefined tool configuration that cannot be modified.',
+  instructions: 'I am a test assistant with locked tool configuration. I can only use specific predefined tools.',
+  lockToolConfiguration: true,
+  enabledMCPTools: [
+    'get_actors_in_level',
+    'spawn_actor',
+    'set_actor_transform',
+    'fetch',
+    'get_scene_info'
+  ],
+}
+
 export const useAssistant = create<AssistantState>()((set, get) => ({
-  assistants: [defaultAssistant],
+  assistants: [defaultAssistant, testLockedAssistant],
   currentAssistant: defaultAssistant,
   addAssistant: (assistant) => {
     set({ assistants: [...get().assistants, assistant] })

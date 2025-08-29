@@ -26,6 +26,7 @@ import { useTranslation } from '@/i18n/react-i18next-compat'
 import { useGeneralSetting } from '@/hooks/useGeneralSetting'
 import { useModelProvider } from '@/hooks/useModelProvider'
 
+import { useAssistant } from '@/hooks/useAssistant'
 import { useAppState } from '@/hooks/useAppState'
 import { MovingBorder } from './MovingBorder'
 import { useChat } from '@/hooks/useChat'
@@ -57,6 +58,9 @@ const ChatInput = ({ model, className, initialMessage }: ChatInputProps) => {
   const { currentThreadId } = useThreads()
   const { t } = useTranslation()
   const { spellCheckChatInput } = useGeneralSetting()
+  
+  const { currentAssistant } = useAssistant()
+  const areToolsLocked = currentAssistant?.lockToolConfiguration === true
 
   const maxRows = 10
 
@@ -661,50 +665,83 @@ const ChatInput = ({ model, className, initialMessage }: ChatInputProps) => {
                       >
                         <TooltipTrigger
                           asChild
-                          disabled={dropdownToolsAvailable}
+                          disabled={dropdownToolsAvailable || areToolsLocked}
                         >
                           <div
                             onClick={(e) => {
+                              if (areToolsLocked) {
+                                e.preventDefault()
+                                e.stopPropagation()
+                                return
+                              }
                               setDropdownToolsAvailable(false)
                               e.stopPropagation()
                             }}
                           >
-                            <DropdownToolsAvailable
-                              initialMessage={initialMessage}
-                              onOpenChange={(isOpen) => {
-                                setDropdownToolsAvailable(isOpen)
-                                if (isOpen) {
-                                  setTooltipToolsAvailable(false)
-                                }
-                              }}
-                            >
-                              {(isOpen, toolsCount) => {
-                                return (
-                                  <div
-                                    className={cn(
-                                      'h-7 p-1 flex items-center justify-center rounded-sm hover:bg-main-view-fg/10 transition-all duration-200 ease-in-out gap-1 cursor-pointer relative',
-                                      isOpen && 'bg-main-view-fg/10'
-                                    )}
-                                  >
-                                    <IconTool
-                                      size={18}
-                                      className="text-main-view-fg/50"
-                                    />
-                                    {toolsCount > 0 && (
-                                      <div className="absolute -top-2 -right-2 bg-accent text-accent-fg text-xs rounded-full size-5 flex items-center justify-center font-medium">
-                                        <span className="leading-0 text-xs">
-                                          {toolsCount > 99 ? '99+' : toolsCount}
-                                        </span>
-                                      </div>
-                                    )}
+                            {areToolsLocked ? (
+                              // When locked, show static button without DropdownToolsAvailable
+                              <div
+                                className={cn(
+                                  'h-7 p-1 flex items-center justify-center rounded-sm transition-all duration-200 ease-in-out gap-1 cursor-not-allowed relative',
+                                  'opacity-50 bg-main-view-fg/5'
+                                )}
+                              >
+                                <IconTool
+                                  size={18}
+                                  className="text-main-view-fg/30"
+                                />
+                                {/* Show count of enabled tools */}
+                                {currentAssistant?.enabledMCPTools && currentAssistant.enabledMCPTools.length > 0 && (
+                                  <div className="absolute -top-2 -right-2 bg-accent text-accent-fg text-xs rounded-full size-5 flex items-center justify-center font-medium opacity-50">
+                                    <span className="leading-0 text-xs">
+                                      {currentAssistant.enabledMCPTools.length > 99 ? '99+' : currentAssistant.enabledMCPTools.length}
+                                    </span>
                                   </div>
-                                )
-                              }}
-                            </DropdownToolsAvailable>
+                                )}
+                                <div className="absolute -top-1 -right-1 bg-amber-500 text-white text-xs rounded-full size-3 flex items-center justify-center">
+                                  🔒
+                                </div>
+                              </div>
+                            ) : (
+                              // When not locked, show normal DropdownToolsAvailable
+                              <DropdownToolsAvailable
+                                initialMessage={initialMessage}
+                                onOpenChange={(isOpen) => {
+                                  setDropdownToolsAvailable(isOpen)
+                                  if (isOpen) {
+                                    setTooltipToolsAvailable(false)
+                                  }
+                                }}
+                              >
+                                {(isOpen, toolsCount) => {
+                                  return (
+                                    <div
+                                      className={cn(
+                                        'h-7 p-1 flex items-center justify-center rounded-sm transition-all duration-200 ease-in-out gap-1 cursor-pointer relative',
+                                        'hover:bg-main-view-fg/10',
+                                        isOpen && 'bg-main-view-fg/10'
+                                      )}
+                                    >
+                                      <IconTool
+                                        size={18}
+                                        className="text-main-view-fg/50"
+                                      />
+                                      {toolsCount > 0 && (
+                                        <div className="absolute -top-2 -right-2 bg-accent text-accent-fg text-xs rounded-full size-5 flex items-center justify-center font-medium">
+                                          <span className="leading-0 text-xs">
+                                            {toolsCount > 99 ? '99+' : toolsCount}
+                                          </span>
+                                        </div>
+                                      )}
+                                    </div>
+                                  )
+                                }}
+                              </DropdownToolsAvailable>
+                            )}
                           </div>
                         </TooltipTrigger>
                         <TooltipContent>
-                          <p>{t('tools')}</p>
+                          <p>{areToolsLocked ? 'Tools locked by assistant' : t('tools')}</p>
                         </TooltipContent>
                       </Tooltip>
                     </TooltipProvider>

@@ -9,7 +9,7 @@ import {
   IconTrash,
   IconStar,
   IconMessageFilled,
-  IconAppsFilled,
+// IconAppsFilled,
   IconX,
   IconSearch,
   IconClipboardSmileFilled,
@@ -55,11 +55,11 @@ const mainMenus = [
     icon: IconClipboardSmileFilled,
     route: route.assistant,
   },
-  {
-    title: 'common:hub',
-    icon: IconAppsFilled,
-    route: route.hub.index,
-  },
+  // {
+  //   title: 'common:hub',
+  //   icon: IconAppsFilled,
+  //   route: route.hub.index,
+  // },
   {
     title: 'common:settings',
     icon: IconSettingsFilled,

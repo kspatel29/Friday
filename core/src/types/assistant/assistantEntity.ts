@@ -31,6 +31,10 @@ export type Assistant = {
   instructions?: string
   /** Represents the tools associated with the object. */
   tools?: AssistantTool[]
+  /** List of enabled MCP tool names for this assistant */
+  enabledMCPTools?: string[]
+  /** Whether tool configuration is locked for this assistant */
+  lockToolConfiguration?: boolean
   /** Represents the file identifiers associated with the object. */
   file_ids: string[]
   /** Represents the metadata of the object. */
