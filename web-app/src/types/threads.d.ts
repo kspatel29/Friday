@@ -55,10 +55,12 @@ type Assistant = {
   instructions: string
   parameters: Record<string, unknown>
   tool_steps?: number
-   /** List of enabled MCP tool names for this assistant */
+  /** List of enabled MCP tool names for this assistant */
   enabledMCPTools?: string[]
   /** Whether tool configuration is locked for this assistant */
   lockToolConfiguration?: boolean
+  /** Whether settings are hidden and unmodifiable for this assistant */
+  hideSettings?: boolean
 }
 
 type TokenSpeed = {

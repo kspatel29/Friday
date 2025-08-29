@@ -180,8 +180,8 @@ export const sendCompletion = async (
     // ref: https://openrouter.ai/docs/api-reference/overview#headers
     ...(provider.provider === 'openrouter' && {
       defaultHeaders: {
-        'HTTP-Referer': 'https://jan.ai',
-        'X-Title': 'Jan',
+        'HTTP-Referer': 'https://gamewave.dev',
+        'X-Title': 'Friday',
       },
     }),
   } as ExtendedConfigOptions)

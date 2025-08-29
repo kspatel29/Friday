@@ -18,6 +18,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { AvatarEmoji } from '@/containers/AvatarEmoji'
 import { useTranslation } from '@/i18n/react-i18next-compat'
+import { cn } from '@/lib/utils'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const Route = createFileRoute(route.assistant as any)({
@@ -65,54 +66,97 @@ function Assistant() {
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
           {assistants
             .slice().sort((a, b) => a.created_at - b.created_at)
-            .map((assistant) => (
-              <div
-                className="bg-main-view-fg/3 p-3 rounded-md"
-                key={assistant.id}
-              >
-                <div className="flex items-center justify-between gap-2">
-                  <h3 className="text-base font-medium text-main-view-fg/80">
-                    <div className="flex items-center gap-1">
-                      {assistant?.avatar && (
-                        <span className="shrink-0 w-4 h-4 relative flex items-center justify-center">
-                          <AvatarEmoji
-                            avatar={assistant?.avatar}
-                            imageClassName="object-cover"
-                            textClassName="text-sm"
-                          />
-                        </span>
-                      )}
-                      <span className="line-clamp-1">{assistant.name}</span>
-                    </div>
-                  </h3>
-                  <div className="flex items-center gap-0.5">
-                    <div
-                      className="size-6 cursor-pointer flex items-center justify-center rounded hover:bg-main-view-fg/10 transition-all duration-200 ease-in-out"
-                      title={t('assistants:editAssistant')}
-                      onClick={() => {
-                        setEditingKey(assistant.id)
-                        setOpen(true)
-                      }}
-                    >
-                      <IconPencil size={18} className="text-main-view-fg/50" />
-                    </div>
-                    <div
-                      className="size-6 cursor-pointer flex items-center justify-center rounded hover:bg-main-view-fg/10 transition-all duration-200 ease-in-out"
-                      title={t('assistants:deleteAssistant')}
-                      onClick={() => handleDelete(assistant.id)}
-                    >
-                      <IconTrash size={18} className="text-main-view-fg/50" />
+            .map((assistant) => {
+              const isSettingsHidden = assistant.hideSettings === true
+              return (
+                <div
+                  className="bg-main-view-fg/3 p-3 rounded-md"
+                  key={assistant.id}
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <h3 className="text-base font-medium text-main-view-fg/80">
+                      <div className="flex items-center gap-1">
+                        {assistant?.avatar && (
+                          <span className="shrink-0 w-4 h-4 relative flex items-center justify-center">
+                            <AvatarEmoji
+                              avatar={assistant?.avatar}
+                              imageClassName="object-cover"
+                              textClassName="text-sm"
+                            />
+                          </span>
+                        )}
+                        <span className="line-clamp-1">{assistant.name}</span>
+                      </div>
+                    </h3>
+                    <div className="flex items-center gap-0.5">
+                      <div
+                        className={cn(
+                          "size-6 relative flex items-center justify-center rounded transition-all duration-200 ease-in-out",
+                          isSettingsHidden 
+                            ? "opacity-50 cursor-not-allowed bg-main-view-fg/5" 
+                            : "cursor-pointer hover:bg-main-view-fg/10"
+                        )}
+                        title={isSettingsHidden ? "Settings locked for this assistant" : t('assistants:editAssistant')}
+                        onClick={() => {
+                          if (isSettingsHidden) {
+                            console.warn(`Settings are hidden for assistant: ${assistant.name}`)
+                            return
+                          }
+                          setEditingKey(assistant.id)
+                          setOpen(true)
+                        }}
+                      >
+                        <IconPencil 
+                          size={18} 
+                          className={cn(
+                            isSettingsHidden ? "text-main-view-fg/30" : "text-main-view-fg/50"
+                          )} 
+                        />
+                        {isSettingsHidden && (
+                          <div className="absolute -top-1 -right-1 bg-amber-500 text-white text-xs rounded-full size-3 flex items-center justify-center">
+                            🔒
+                          </div>
+                        )}
+                      </div>
+                      <div
+                        className={cn(
+                          "size-6 relative flex items-center justify-center rounded transition-all duration-200 ease-in-out",
+                          isSettingsHidden 
+                            ? "opacity-50 cursor-not-allowed bg-main-view-fg/5" 
+                            : "cursor-pointer hover:bg-main-view-fg/10"
+                        )}
+                        title={isSettingsHidden ? "Delete locked for this assistant" : t('assistants:deleteAssistant')}
+                        onClick={() => {
+                          if (isSettingsHidden) {
+                            console.warn(`Delete is locked for assistant: ${assistant.name}`)
+                            return
+                          }
+                          handleDelete(assistant.id)
+                        }}
+                      >
+                        <IconTrash 
+                          size={18} 
+                          className={cn(
+                            isSettingsHidden ? "text-main-view-fg/30" : "text-main-view-fg/50"
+                          )} 
+                        />
+                        {isSettingsHidden && (
+                          <div className="absolute -top-1 -right-1 bg-amber-500 text-white text-xs rounded-full size-3 flex items-center justify-center">
+                            🔒
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
+                  <p
+                    className="text-main-view-fg/50 mt-1 line-clamp-2"
+                    title={assistant.description}
+                  >
+                    {assistant.description}
+                  </p>
                 </div>
-                <p
-                  className="text-main-view-fg/50 mt-1 line-clamp-2"
-                  title={assistant.description}
-                >
-                  {assistant.description}
-                </p>
-              </div>
-            ))}
+              )
+            })}
 
           <div
             className="bg-main-view p-3 min-h-[88px] rounded-md border border-dashed border-main-view-fg/10 flex items-center justify-center cursor-pointer hover:bg-main-view-fg/1 transition-all duration-200 ease-in-out"

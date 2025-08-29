@@ -185,8 +185,19 @@ export const testLockedAssistant: Assistant = {
   ],
 }
 
+export const testHiddenSettingsAssistant: Assistant = {
+  id: 'test-hidden-settings-assistant',
+  name: 'Hidden Settings Assistant',
+  created_at: Date.now(),
+  parameters: {},
+  avatar: '🔐',
+  description: 'A test assistant whose settings cannot be accessed or modified.',
+  instructions: 'I am a test assistant with hidden settings. My configuration is locked and cannot be changed.',
+  hideSettings: true,
+}
+
 export const useAssistant = create<AssistantState>()((set, get) => ({
-  assistants: [defaultAssistant, testLockedAssistant],
+  assistants: [defaultAssistant, testLockedAssistant, testHiddenSettingsAssistant],
   currentAssistant: defaultAssistant,
   addAssistant: (assistant) => {
     set({ assistants: [...get().assistants, assistant] })

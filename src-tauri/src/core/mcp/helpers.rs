@@ -524,7 +524,7 @@ async fn schedule_mcp_start_task<R: Runtime>(
             protocol_version: Default::default(),
             capabilities: ClientCapabilities::default(),
             client_info: Implementation {
-                name: "Jan Streamable Client".to_string(),
+                name: "Friday Streamable Client".to_string(),
                 version: "0.0.1".to_string(),
             },
         };
@@ -595,7 +595,7 @@ async fn schedule_mcp_start_task<R: Runtime>(
             protocol_version: Default::default(),
             capabilities: ClientCapabilities::default(),
             client_info: Implementation {
-                name: "Jan SSE Client".to_string(),
+                name: "Friday SSE Client".to_string(),
                 version: "0.0.1".to_string(),
             },
         };

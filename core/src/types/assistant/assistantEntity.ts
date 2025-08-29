@@ -35,6 +35,8 @@ export type Assistant = {
   enabledMCPTools?: string[]
   /** Whether tool configuration is locked for this assistant */
   lockToolConfiguration?: boolean
+  /** Whether settings are hidden and unmodifiable for this assistant */
+  hideSettings?: boolean
   /** Represents the file identifiers associated with the object. */
   file_ids: string[]
   /** Represents the metadata of the object. */

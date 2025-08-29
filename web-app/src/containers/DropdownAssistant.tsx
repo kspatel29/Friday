@@ -11,6 +11,7 @@ import AddEditAssistant from './dialogs/AddEditAssistant'
 import { IconCirclePlus, IconSettings } from '@tabler/icons-react'
 import { useThreads } from '@/hooks/useThreads'
 import { AvatarEmoji } from '@/containers/AvatarEmoji'
+import { cn } from '@/lib/utils'
 
 const DropdownAssistant = () => {
   const {
@@ -29,6 +30,19 @@ const DropdownAssistant = () => {
 
   const selectedAssistant =
     assistants.find((a) => a.id === currentAssistant.id) || assistants[0]
+
+  // Check if settings are hidden for the selected assistant
+  const areSettingsHidden = selectedAssistant?.hideSettings === true
+
+  const handleSettingsClick = (assistantId: string) => {
+    const assistant = assistants.find((a) => a.id === assistantId)
+    if (assistant?.hideSettings) {
+      console.warn(`Settings are hidden for assistant: ${assistant.name}`)
+      return
+    }
+    setEditingAssistantId(assistantId)
+    setDialogOpen(true)
+  }
 
   return (
     <>
@@ -53,19 +67,31 @@ const DropdownAssistant = () => {
             </button>
           </DropdownMenuTrigger>
           <div
-            className="size-5 cursor-pointer relative z-10 flex items-center justify-center rounded hover:bg-main-view-fg/10 transition-all duration-200 ease-in-out "
+            className={cn(
+              "size-5 relative z-10 flex items-center justify-center rounded transition-all duration-200 ease-in-out",
+              areSettingsHidden 
+                ? "opacity-50 cursor-not-allowed bg-main-view-fg/5" 
+                : "cursor-pointer hover:bg-main-view-fg/10"
+            )}
             onClick={() => {
+              if (areSettingsHidden) return
               if (selectedAssistant) {
-                setEditingAssistantId(selectedAssistant.id)
-                setDialogOpen(true)
+                handleSettingsClick(selectedAssistant.id)
               }
             }}
           >
             <IconSettings
               size={16}
-              className="text-main-view-fg/50"
-              title="Edit Assistant"
+              className={cn(
+                areSettingsHidden ? "text-main-view-fg/30" : "text-main-view-fg/50"
+              )}
+              title={areSettingsHidden ? "Settings locked for this assistant" : "Edit Assistant"}
             />
+            {areSettingsHidden && (
+              <div className="absolute -top-1 -right-1 bg-amber-500 text-white text-xs rounded-full size-3 flex items-center justify-center">
+                🔒
+              </div>
+            )}
           </div>
         </div>
         <DropdownMenuContent
@@ -74,47 +100,65 @@ const DropdownAssistant = () => {
           sideOffset={10}
           align="start"
         >
-          {assistants.map((assistant) => (
-            <div
-              className="relative pr-6 hover:bg-main-view-fg/4 rounded-sm"
-              key={assistant.id}
-            >
-              <DropdownMenuItem
-                className="hover:bg-transparent"
-                onClick={() => {
-                  setCurrentAssistant(assistant)
-                  updateCurrentThreadAssistant(assistant)
-                }}
+          {assistants.map((assistant) => {
+            const isSettingsHidden = assistant.hideSettings === true
+            return (
+              <div
+                className="relative pr-6 hover:bg-main-view-fg/4 rounded-sm"
+                key={assistant.id}
               >
-                <div className="text-main-view-fg/70 cursor-pointer flex gap-2 w-full">
-                  {assistant?.avatar && (
-                    <div className="shrink-0 relative w-4 h-4">
-                      <AvatarEmoji
-                        avatar={assistant?.avatar}
-                        imageClassName="object-cover"
-                        textClassName=""
-                      />
-                    </div>
-                  )}
+                <DropdownMenuItem
+                  className="hover:bg-transparent"
+                  onClick={() => {
+                    setCurrentAssistant(assistant)
+                    updateCurrentThreadAssistant(assistant)
+                  }}
+                >
+                  <div className="text-main-view-fg/70 cursor-pointer flex gap-2 w-full">
+                    {assistant?.avatar && (
+                      <div className="shrink-0 relative w-4 h-4">
+                        <AvatarEmoji
+                          avatar={assistant?.avatar}
+                          imageClassName="object-cover"
+                          textClassName=""
+                        />
+                      </div>
+                    )}
 
-                  <div className="text-left">
-                    <span className="line-clamp-1">{assistant.name}</span>
+                    <div className="text-left">
+                      <span className="line-clamp-1">{assistant.name}</span>
+                    </div>
+                  </div>
+                </DropdownMenuItem>
+                <div className="absolute top-1/2 -translate-y-1/2 right-1">
+                  <div 
+                    className={cn(
+                      "size-5 relative z-10 flex items-center justify-center rounded transition-all duration-200 ease-in-out",
+                      isSettingsHidden 
+                        ? "opacity-50 cursor-not-allowed bg-main-view-fg/5" 
+                        : "cursor-pointer hover:bg-main-view-fg/10"
+                    )}
+                  >
+                    <IconSettings
+                      size={16}
+                      className={cn(
+                        isSettingsHidden ? "text-main-view-fg/30" : "text-main-view-fg/50"
+                      )}
+                      onClick={() => {
+                        if (isSettingsHidden) return
+                        handleSettingsClick(assistant.id)
+                      }}
+                    />
+                    {isSettingsHidden && (
+                      <div className="absolute -top-1 -right-1 bg-amber-500 text-white text-xs rounded-full size-3 flex items-center justify-center">
+                        🔒
+                      </div>
+                    )}
                   </div>
                 </div>
-              </DropdownMenuItem>
-              <div className="absolute top-1/2 -translate-y-1/2 right-1">
-                <div className="size-5 text-main-view-fg/50 cursor-pointer relative z-10 flex items-center justify-center rounded hover:bg-main-view-fg/10 transition-all duration-200 ease-in-out">
-                  <IconSettings
-                    size={16}
-                    onClick={() => {
-                      setEditingAssistantId(assistant.id)
-                      setDialogOpen(true)
-                    }}
-                  />
-                </div>
               </div>
-            </div>
-          ))}
+            )
+          })}
 
           <DropdownMenuSeparator />
           <DropdownMenuItem
