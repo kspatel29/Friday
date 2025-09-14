@@ -341,4 +341,42 @@ export const predefinedProviders = [
       },
     ],
   },
+  {
+    active: true,
+    api_key: '',
+    base_url: 'http://127.0.0.1:8000', // Your Agno agent backend URL
+    provider: 'agno-agent',
+    settings: [
+      {
+        key: 'api-key',
+        title: 'API Key',
+        description: 'Your Agno agent API key (if required)',
+        controller_type: 'input',
+        controller_props: { 
+          placeholder: 'Enter your API key...',
+          value: '',
+          type: 'password',
+          input_actions: ['unobscure', 'copy'],
+        },
+      },
+      {
+        key: 'base-url', 
+        title: 'Base URL',
+        description: 'The base URL for your Agno agent backend',
+        controller_type: 'input',
+        controller_props: { 
+          placeholder: 'http://localhost:8000',
+          value: 'http://127.0.0.1:8000',
+        },
+      },
+    ],
+    models: [
+      {
+        id: 'agno-agent-default',
+        name: 'Agno Agent',
+        description: 'Your custom Agno agent implementation',
+        capabilities: ['completion', 'tools'], // Supports both chat and tools
+      },
+    ],
+  }
 ]

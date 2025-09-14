@@ -44,6 +44,11 @@ export const getProviders = async (): Promise<ModelProvider[]> => {
 
   const runtimeProviders: ModelProvider[] = []
   for (const [providerName, value] of EngineManager.instance().engines) {
+    // Skip llamacpp provider
+    if (providerName === 'llamacpp') {
+      continue;
+    }
+    
     const models = (await fetchModels()) ?? []
     const provider: ModelProvider = {
       active: false,

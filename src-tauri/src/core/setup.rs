@@ -101,6 +101,13 @@ pub fn install_extensions(app: tauri::AppHandle, force: bool) -> Result<(), Stri
                 })?;
 
             let extension_name = extension_name.ok_or("package.json not found in archive")?;
+            
+            // Skip llamacpp extension installation
+            if extension_name.contains("llamacpp") {
+                log::info!("Skipping llamacpp extension installation: {}", extension_name);
+                continue;
+            }
+
             let extension_dir = extensions_path.join(extension_name.clone());
             fs::create_dir_all(&extension_dir).map_err(|e| e.to_string())?;
 

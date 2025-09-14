@@ -11,6 +11,8 @@ import {
 } from '@/components/ui/dialog'
 import { twMerge } from 'tailwind-merge'
 import { useTranslation } from '@/i18n/react-i18next-compat'
+import { SketchViewer } from '@/components/ui/sketch-viewer'
+import { SketchData } from '@/utils/sketchRenderer'
 
 interface Props {
   result: string
@@ -75,6 +77,32 @@ const parseMCPResponse = (result: string) => {
       parsedResult: result,
       contentItems: [],
       hasStructuredContent: false,
+      parseError: true,
+    }
+  }
+}
+
+// Parse sketch agent tool response
+const parseSketchResponse = (result: string) => {
+  try {
+    const parsed = JSON.parse(result)
+    // Check if this looks like sketch data (has strokes array)
+    if (parsed && typeof parsed === 'object' && Array.isArray(parsed.strokes)) {
+      return {
+        sketchData: parsed as SketchData,
+        isSketch: true,
+        parseError: false,
+      }
+    }
+    return {
+      sketchData: null,
+      isSketch: false,
+      parseError: false,
+    }
+  } catch {
+    return {
+      sketchData: null,
+      isSketch: false,
       parseError: true,
     }
   }
@@ -148,10 +176,28 @@ const ToolCallBlock = ({ id, name, result, loading, args }: Props) => {
     setModalImage(null)
   }
 
-  // Parse the MCP response and extract content items
-  const { parsedResult, contentItems, hasStructuredContent } = useMemo(() => {
-    return parseMCPResponse(result)
-  }, [result])
+  // Check if this is a sketch agent tool
+  const isSketchTool = name === 'sketch_agent_tool'
+
+  // Parse the response based on tool type
+  const { parsedResult, contentItems, hasStructuredContent, sketchData, isSketch } = useMemo(() => {
+    if (isSketchTool) {
+      const sketchResult = parseSketchResponse(result)
+      return {
+        ...sketchResult,
+        parsedResult: result,
+        contentItems: [],
+        hasStructuredContent: false,
+      }
+    } else {
+      const mcpResult = parseMCPResponse(result)
+      return {
+        ...mcpResult,
+        sketchData: null,
+        isSketch: false,
+      }
+    }
+  }, [result, isSketchTool])
 
   return (
     <div
@@ -215,7 +261,16 @@ const ToolCallBlock = ({ id, name, result, loading, args }: Props) => {
             {result && (
               <>
                 <p>Output:</p>
-                {hasStructuredContent ? (
+                {isSketchTool && isSketch && sketchData ? (
+                  /* Render sketch for sketch_agent_tool */
+                  <div className="my-3">
+                    <SketchViewer 
+                      sketchData={sketchData} 
+                      title="Generated Sketch"
+                      className="max-w-lg"
+                    />
+                  </div>
+                ) : hasStructuredContent ? (
                   /* Render each content item individually based on its type */
                   <div className="space-y-2">
                     {contentItems.map((item, index) => (
@@ -239,6 +294,7 @@ const ToolCallBlock = ({ id, name, result, loading, args }: Props) => {
                 )}
               </>
             )}
+
           </div>
         </div>
       </div>

@@ -197,7 +197,7 @@ export const testHiddenSettingsAssistant: Assistant = {
 }
 
 export const useAssistant = create<AssistantState>()((set, get) => ({
-  assistants: [defaultAssistant, testLockedAssistant, testHiddenSettingsAssistant],
+  assistants: [defaultAssistant],
   currentAssistant: defaultAssistant,
   addAssistant: (assistant) => {
     set({ assistants: [...get().assistants, assistant] })

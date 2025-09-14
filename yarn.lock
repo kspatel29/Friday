@@ -12,6 +12,64 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@ag-ui/agno@npm:^0.0.2":
+  version: 0.0.2
+  resolution: "@ag-ui/agno@npm:0.0.2"
+  dependencies:
+    "@ag-ui/client": "npm:0.0.35"
+  peerDependencies:
+    rxjs: 7.8.1
+  checksum: 10c0/c26beb78001618801b8e100b8eb10d6aed3d14704daa90eab07ccc03d3c936b2776da4343500ca00d2818f02012467e65967974fb20017078c4ab56d304d6e12
+  languageName: node
+  linkType: hard
+
+"@ag-ui/client@npm:0.0.35":
+  version: 0.0.35
+  resolution: "@ag-ui/client@npm:0.0.35"
+  dependencies:
+    "@ag-ui/core": "npm:0.0.35"
+    "@ag-ui/encoder": "npm:0.0.35"
+    "@ag-ui/proto": "npm:0.0.35"
+    "@types/uuid": "npm:^10.0.0"
+    fast-json-patch: "npm:^3.1.1"
+    rxjs: "npm:7.8.1"
+    untruncate-json: "npm:^0.0.1"
+    uuid: "npm:^11.1.0"
+    zod: "npm:^3.22.4"
+  checksum: 10c0/bd9643f3a754c830d8d4c3ad805b19689d578fdb0bb5eb47217d2bbde0b4fdfc12a69ea7cd0e996e85dbc026c72cd03ffa772afcdcc2e882dff78ab0d7768e11
+  languageName: node
+  linkType: hard
+
+"@ag-ui/core@npm:0.0.35":
+  version: 0.0.35
+  resolution: "@ag-ui/core@npm:0.0.35"
+  dependencies:
+    rxjs: "npm:7.8.1"
+    zod: "npm:^3.22.4"
+  checksum: 10c0/6370ac0842e6ea0c52a1719855055abf62de11db842fb15a8c0dc7596b6dcc16d3c8344e0a59a70c74c44ff38a502171195049e6f3e32e7472daf06558a3fbc8
+  languageName: node
+  linkType: hard
+
+"@ag-ui/encoder@npm:0.0.35":
+  version: 0.0.35
+  resolution: "@ag-ui/encoder@npm:0.0.35"
+  dependencies:
+    "@ag-ui/core": "npm:0.0.35"
+    "@ag-ui/proto": "npm:0.0.35"
+  checksum: 10c0/394ee115d381fe5a3fe91e40b7f0cd7dbd80c0a1ebed7412e716ac72f6ed21bd8117860458febb745f8a6bb547402a5170a34cfb583072ef1d422e02a031d430
+  languageName: node
+  linkType: hard
+
+"@ag-ui/proto@npm:0.0.35":
+  version: 0.0.35
+  resolution: "@ag-ui/proto@npm:0.0.35"
+  dependencies:
+    "@ag-ui/core": "npm:0.0.35"
+    "@bufbuild/protobuf": "npm:^2.2.5"
+  checksum: 10c0/d794ad22dae5dac9aa10fa2b3803a5ef8e1d834a79fb5206b489b88b2277153d55abb28364be959ba1860ecd037ea562a8da147886034570b00c6fdb05745d7f
+  languageName: node
+  linkType: hard
+
 "@ampproject/remapping@npm:^2.2.0, @ampproject/remapping@npm:^2.3.0":
   version: 2.3.0
   resolution: "@ampproject/remapping@npm:2.3.0"
@@ -1597,6 +1655,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@bufbuild/protobuf@npm:^2.2.5":
+  version: 2.7.0
+  resolution: "@bufbuild/protobuf@npm:2.7.0"
+  checksum: 10c0/9ae9b9ef7f8fd5cc0fdf8c45650c9cbd4324b61ca289feb2e7a28dabda755f025241ce58a88ae269821fd719302a6fc6709bcdb2175b7311ba4feb8af73ed560
+  languageName: node
+  linkType: hard
+
 "@csstools/color-helpers@npm:^5.0.2":
   version: 5.0.2
   resolution: "@csstools/color-helpers@npm:5.0.2"
@@ -2445,6 +2510,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@janhq/web-app@workspace:web-app"
   dependencies:
+    "@ag-ui/agno": "npm:^0.0.2"
     "@dnd-kit/core": "npm:^6.3.1"
     "@dnd-kit/modifiers": "npm:^9.0.0"
     "@dnd-kit/sortable": "npm:^10.0.0"
@@ -9984,6 +10050,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"fast-json-patch@npm:^3.1.1":
+  version: 3.1.1
+  resolution: "fast-json-patch@npm:3.1.1"
+  checksum: 10c0/8a0438b4818bb53153275fe5b38033610e8c9d9eb11869e6a7dc05eb92fa70f3caa57015e344eb3ae1e71c7a75ad4cc6bc2dc9e0ff281d6ed8ecd44505210ca8
+  languageName: node
+  linkType: hard
+
 "fast-json-stable-stringify@npm:^2.0.0":
   version: 2.1.0
   resolution: "fast-json-stable-stringify@npm:2.1.0"
@@ -16754,6 +16827,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"rxjs@npm:7.8.1":
+  version: 7.8.1
+  resolution: "rxjs@npm:7.8.1"
+  dependencies:
+    tslib: "npm:^2.1.0"
+  checksum: 10c0/3c49c1ecd66170b175c9cacf5cef67f8914dcbc7cd0162855538d365c83fea631167cacb644b3ce533b2ea0e9a4d0b12175186985f89d75abe73dbd8f7f06f68
+  languageName: node
+  linkType: hard
+
 "rxjs@npm:^7.8.1":
   version: 7.8.2
   resolution: "rxjs@npm:7.8.2"
@@ -18413,6 +18495,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"untruncate-json@npm:^0.0.1":
+  version: 0.0.1
+  resolution: "untruncate-json@npm:0.0.1"
+  checksum: 10c0/9fbd68098fcbee72c7178a36de624732dea67527117859540c546de9c03403ecb28a41f82bc8097f9f66f40485c749e5170d935e580648f0b7f9412641ad899c
+  languageName: node
+  linkType: hard
+
 "unzipper@npm:^0.12.3":
   version: 0.12.3
   resolution: "unzipper@npm:0.12.3"
@@ -19417,6 +19506,13 @@ __metadata:
   version: 0.1.0
   resolution: "yocto-queue@npm:0.1.0"
   checksum: 10c0/dceb44c28578b31641e13695d200d34ec4ab3966a5729814d5445b194933c096b7ced71494ce53a0e8820685d1d010df8b2422e5bf2cdea7e469d97ffbea306f
+  languageName: node
+  linkType: hard
+
+"zod@npm:^3.22.4":
+  version: 3.25.76
+  resolution: "zod@npm:3.25.76"
+  checksum: 10c0/5718ec35e3c40b600316c5b4c5e4976f7fee68151bc8f8d90ec18a469be9571f072e1bbaace10f1e85cf8892ea12d90821b200e980ab46916a6166a4260a983c
   languageName: node
   linkType: hard
 

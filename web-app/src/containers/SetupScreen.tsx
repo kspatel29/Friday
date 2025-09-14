@@ -3,7 +3,7 @@ import { useModelProvider } from '@/hooks/useModelProvider'
 import { Link } from '@tanstack/react-router'
 import { route } from '@/constants/routes'
 import HeaderPage from './HeaderPage'
-import { isProd } from '@/lib/version'
+// import { isProd } from '@/lib/version'
 import { useTranslation } from '@/i18n/react-i18next-compat'
 import { localStorageKey } from '@/constants/localStorage'
 
@@ -31,7 +31,7 @@ function SetupScreen() {
             </p>
           </div>
           <div className="flex gap-4 flex-col">
-            <Card
+            {/* <Card
               header={
                 <Link
                   to={route.hub.index}
@@ -46,7 +46,7 @@ function SetupScreen() {
                   </div>
                 </Link>
               }
-            ></Card>
+            ></Card> */}
             <Card
               header={
                 <Link
