@@ -54,6 +54,8 @@ docs/.next/
 ## cargo
 target
 Cargo.lock
+src-tauri/resources/
 
 ## test
 test-data
+llm-docs

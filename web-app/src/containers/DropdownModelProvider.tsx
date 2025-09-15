@@ -20,10 +20,9 @@ import { localStorageKey } from '@/constants/localStorage'
 import { useTranslation } from '@/i18n/react-i18next-compat'
 import { useFavoriteModel } from '@/hooks/useFavoriteModel'
 import { predefinedProviders } from '@/consts/providers'
-import {
-  checkMmprojExistsAndUpdateOffloadMMprojSetting,
-  checkMmprojExists,
-} from '@/services/models'
+import { useServiceHub } from '@/hooks/useServiceHub'
+import { PlatformFeatures } from '@/lib/platform/const'
+import { PlatformFeature } from '@/lib/platform/types'
 
 type DropdownModelProviderProps = {
   model?: ThreadModel
@@ -78,6 +77,7 @@ const DropdownModelProvider = ({
   const navigate = useNavigate()
   const { t } = useTranslation()
   const { favoriteModels } = useFavoriteModel()
+  const serviceHub = useServiceHub()
 
   // Search state
   const [open, setOpen] = useState(false)
@@ -107,7 +107,7 @@ const DropdownModelProvider = ({
   const checkAndUpdateModelVisionCapability = useCallback(
     async (modelId: string) => {
       try {
-        const hasVision = await checkMmprojExists(modelId)
+        const hasVision = await serviceHub.models().checkMmprojExists(modelId)
         if (hasVision) {
           // Update the model capabilities to include 'vision'
           const provider = getProviderByName('llamacpp')
@@ -119,13 +119,20 @@ const DropdownModelProvider = ({
               const model = provider.models[modelIndex]
               const capabilities = model.capabilities || []
 
-              // Add 'vision' capability if not already present
-              if (!capabilities.includes('vision')) {
+              // Add 'vision' capability if not already present AND if user hasn't manually configured capabilities
+              // Check if model has a custom capabilities config flag
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              const hasUserConfiguredCapabilities = (model as any)._userConfiguredCapabilities === true
+              
+              if (!capabilities.includes('vision') && !hasUserConfiguredCapabilities) {
                 const updatedModels = [...provider.models]
                 updatedModels[modelIndex] = {
                   ...model,
                   capabilities: [...capabilities, 'vision'],
-                }
+                  // Mark this as auto-detected, not user-configured
+                  _autoDetectedVision: true,
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                } as any
 
                 updateProvider('llamacpp', { models: updatedModels })
               }
@@ -136,10 +143,10 @@ const DropdownModelProvider = ({
         console.debug('Error checking mmproj for model:', modelId, error)
       }
     },
-    [getProviderByName, updateProvider]
+    [getProviderByName, updateProvider, serviceHub]
   )
 
-  // Initialize model provider only once
+  // Initialize model provider - avoid race conditions with manual selections
   useEffect(() => {
     const initializeModel = async () => {
       // Auto select model when existing thread is passed
@@ -150,11 +157,13 @@ const DropdownModelProvider = ({
         }
         // Check mmproj existence for llamacpp models
         if (model?.provider === 'llamacpp') {
-          await checkMmprojExistsAndUpdateOffloadMMprojSetting(
-            model.id as string,
-            updateProvider,
-            getProviderByName
-          )
+          await serviceHub
+            .models()
+            .checkMmprojExistsAndUpdateOffloadMMprojSetting(
+              model.id as string,
+              updateProvider,
+              getProviderByName
+            )
           // Also check vision capability
           await checkAndUpdateModelVisionCapability(model.id as string)
         }
@@ -164,21 +173,52 @@ const DropdownModelProvider = ({
         if (lastUsed && checkModelExists(lastUsed.provider, lastUsed.model)) {
           selectModelProvider(lastUsed.provider, lastUsed.model)
           if (lastUsed.provider === 'llamacpp') {
-            await checkMmprojExistsAndUpdateOffloadMMprojSetting(
-              lastUsed.model,
-              updateProvider,
-              getProviderByName
-            )
+            await serviceHub
+              .models()
+              .checkMmprojExistsAndUpdateOffloadMMprojSetting(
+                lastUsed.model,
+                updateProvider,
+                getProviderByName
+              )
             // Also check vision capability
             await checkAndUpdateModelVisionCapability(lastUsed.model)
           }
         } else {
+          // For web-only builds, auto-select the first model from jan provider
+          if (PlatformFeatures[PlatformFeature.WEB_AUTO_MODEL_SELECTION]) {
+            const janProvider = providers.find(
+              (p) => p.provider === 'jan' && p.active && p.models.length > 0
+            )
+            if (janProvider && janProvider.models.length > 0) {
+              const firstModel = janProvider.models[0]
+              selectModelProvider(janProvider.provider, firstModel.id)
+              return
+            }
+          }
           selectModelProvider('', '')
+        }
+      } else {
+        // Get current state for web auto-selection check
+        const currentState = { selectedModel, selectedProvider }
+        if (
+          PlatformFeatures[PlatformFeature.WEB_AUTO_MODEL_SELECTION] &&
+          !currentState.selectedModel &&
+          !currentState.selectedProvider
+        ) {
+          // For web-only builds, auto-select the first model from jan provider only if nothing is selected
+          const janProvider = providers.find(
+            (p) => p.provider === 'jan' && p.active && p.models.length > 0
+          )
+          if (janProvider && janProvider.models.length > 0) {
+            const firstModel = janProvider.models[0]
+            selectModelProvider(janProvider.provider, firstModel.id)
+          }
         }
       }
     }
 
     initializeModel()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     model,
     selectModelProvider,
@@ -189,6 +229,8 @@ const DropdownModelProvider = ({
     updateProvider,
     getProviderByName,
     checkAndUpdateModelVisionCapability,
+    serviceHub,
+    // selectedModel and selectedProvider intentionally excluded to prevent race conditions
   ])
 
   // Update display model when selection changes
@@ -354,11 +396,13 @@ const DropdownModelProvider = ({
 
       // Check mmproj existence for llamacpp models
       if (searchableModel.provider.provider === 'llamacpp') {
-        await checkMmprojExistsAndUpdateOffloadMMprojSetting(
-          searchableModel.model.id,
-          updateProvider,
-          getProviderByName
-        )
+        await serviceHub
+          .models()
+          .checkMmprojExistsAndUpdateOffloadMMprojSetting(
+            searchableModel.model.id,
+            updateProvider,
+            getProviderByName
+          )
         // Also check vision capability
         await checkAndUpdateModelVisionCapability(searchableModel.model.id)
       }
@@ -380,6 +424,7 @@ const DropdownModelProvider = ({
       updateProvider,
       getProviderByName,
       checkAndUpdateModelVisionCapability,
+      serviceHub,
     ]
   )
 
@@ -549,22 +594,26 @@ const DropdownModelProvider = ({
                             {getProviderTitle(providerInfo.provider)}
                           </span>
                         </div>
-                        <div
-                          className="size-6 cursor-pointer flex items-center justify-center rounded-sm hover:bg-main-view-fg/10 transition-all duration-200 ease-in-out"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            navigate({
-                              to: route.settings.providers,
-                              params: { providerName: providerInfo.provider },
-                            })
-                            setOpen(false)
-                          }}
-                        >
-                          <IconSettings
-                            size={16}
-                            className="text-main-view-fg/50"
-                          />
-                        </div>
+                        {PlatformFeatures[
+                          PlatformFeature.MODEL_PROVIDER_SETTINGS
+                        ] && (
+                          <div
+                            className="size-6 cursor-pointer flex items-center justify-center rounded-sm hover:bg-main-view-fg/10 transition-all duration-200 ease-in-out"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              navigate({
+                                to: route.settings.providers,
+                                params: { providerName: providerInfo.provider },
+                              })
+                              setOpen(false)
+                            }}
+                          >
+                            <IconSettings
+                              size={16}
+                              className="text-main-view-fg/50"
+                            />
+                          </div>
+                        )}
                       </div>
 
                       {/* Models for this provider */}

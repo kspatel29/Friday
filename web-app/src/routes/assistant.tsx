@@ -7,15 +7,7 @@ import { useAssistant } from '@/hooks/useAssistant'
 import HeaderPage from '@/containers/HeaderPage'
 import { IconCirclePlus, IconPencil, IconTrash } from '@tabler/icons-react'
 import AddEditAssistant from '@/containers/dialogs/AddEditAssistant'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
-import { Button } from '@/components/ui/button'
+import { DeleteAssistantDialog } from '@/containers/dialogs'
 import { AvatarEmoji } from '@/containers/AvatarEmoji'
 import { useTranslation } from '@/i18n/react-i18next-compat'
 import { cn } from '@/lib/utils'
@@ -65,7 +57,8 @@ function Assistant() {
       <div className="h-full p-4 overflow-y-auto">
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
           {assistants
-            .slice().sort((a, b) => a.created_at - b.created_at)
+            .slice()
+            .sort((a, b) => a.created_at - b.created_at)
             .map((assistant) => {
               const isSettingsHidden = assistant.hideSettings === true
               return (
@@ -91,26 +84,34 @@ function Assistant() {
                     <div className="flex items-center gap-0.5">
                       <div
                         className={cn(
-                          "size-6 relative flex items-center justify-center rounded transition-all duration-200 ease-in-out",
-                          isSettingsHidden 
-                            ? "opacity-50 cursor-not-allowed bg-main-view-fg/5" 
-                            : "cursor-pointer hover:bg-main-view-fg/10"
+                          'size-6 relative flex items-center justify-center rounded transition-all duration-200 ease-in-out',
+                          isSettingsHidden
+                            ? 'opacity-50 cursor-not-allowed bg-main-view-fg/5'
+                            : 'cursor-pointer hover:bg-main-view-fg/10'
                         )}
-                        title={isSettingsHidden ? "Settings locked for this assistant" : t('assistants:editAssistant')}
+                        title={
+                          isSettingsHidden
+                            ? 'Settings locked for this assistant'
+                            : t('assistants:editAssistant')
+                        }
                         onClick={() => {
                           if (isSettingsHidden) {
-                            console.warn(`Settings are hidden for assistant: ${assistant.name}`)
+                            console.warn(
+                              `Settings are hidden for assistant: ${assistant.name}`
+                            )
                             return
                           }
                           setEditingKey(assistant.id)
                           setOpen(true)
                         }}
                       >
-                        <IconPencil 
-                          size={18} 
+                        <IconPencil
+                          size={18}
                           className={cn(
-                            isSettingsHidden ? "text-main-view-fg/30" : "text-main-view-fg/50"
-                          )} 
+                            isSettingsHidden
+                              ? 'text-main-view-fg/30'
+                              : 'text-main-view-fg/50'
+                          )}
                         />
                         {isSettingsHidden && (
                           <div className="absolute -top-1 -right-1 bg-amber-500 text-white text-xs rounded-full size-3 flex items-center justify-center">
@@ -120,25 +121,33 @@ function Assistant() {
                       </div>
                       <div
                         className={cn(
-                          "size-6 relative flex items-center justify-center rounded transition-all duration-200 ease-in-out",
-                          isSettingsHidden 
-                            ? "opacity-50 cursor-not-allowed bg-main-view-fg/5" 
-                            : "cursor-pointer hover:bg-main-view-fg/10"
+                          'size-6 relative flex items-center justify-center rounded transition-all duration-200 ease-in-out',
+                          isSettingsHidden
+                            ? 'opacity-50 cursor-not-allowed bg-main-view-fg/5'
+                            : 'cursor-pointer hover:bg-main-view-fg/10'
                         )}
-                        title={isSettingsHidden ? "Delete locked for this assistant" : t('assistants:deleteAssistant')}
+                        title={
+                          isSettingsHidden
+                            ? 'Delete locked for this assistant'
+                            : t('assistants:deleteAssistant')
+                        }
                         onClick={() => {
                           if (isSettingsHidden) {
-                            console.warn(`Delete is locked for assistant: ${assistant.name}`)
+                            console.warn(
+                              `Delete is locked for assistant: ${assistant.name}`
+                            )
                             return
                           }
                           handleDelete(assistant.id)
                         }}
                       >
-                        <IconTrash 
-                          size={18} 
+                        <IconTrash
+                          size={18}
                           className={cn(
-                            isSettingsHidden ? "text-main-view-fg/30" : "text-main-view-fg/50"
-                          )} 
+                            isSettingsHidden
+                              ? 'text-main-view-fg/30'
+                              : 'text-main-view-fg/50'
+                          )}
                         />
                         {isSettingsHidden && (
                           <div className="absolute -top-1 -right-1 bg-amber-500 text-white text-xs rounded-full size-3 flex items-center justify-center">
@@ -178,27 +187,11 @@ function Assistant() {
           }
           onSave={handleSave}
         />
-        <Dialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>{t('assistants:deleteConfirmation')}</DialogTitle>
-              <DialogDescription>
-                {t('assistants:deleteConfirmationDesc')}
-              </DialogDescription>
-            </DialogHeader>
-            <DialogFooter>
-              <Button
-                variant="link"
-                onClick={() => setDeleteConfirmOpen(false)}
-              >
-                {t('assistants:cancel')}
-              </Button>
-              <Button variant="destructive" onClick={confirmDelete} autoFocus>
-                {t('assistants:delete')}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+        <DeleteAssistantDialog
+          open={deleteConfirmOpen}
+          onOpenChange={setDeleteConfirmOpen}
+          onConfirm={confirmDelete}
+        />
       </div>
     </div>
   )
