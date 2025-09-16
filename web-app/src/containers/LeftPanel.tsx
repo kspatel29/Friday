@@ -31,8 +31,8 @@ import { DownloadManagement } from '@/containers/DownloadManegement'
 import { useSmallScreen } from '@/hooks/useMediaQuery'
 import { useClickOutside } from '@/hooks/useClickOutside'
 import { useDownloadStore } from '@/hooks/useDownloadStore'
-import { PlatformFeatures } from '@/lib/platform/const'
-import { PlatformFeature } from '@/lib/platform/types'
+// import { PlatformFeatures } from '@/lib/platform/const'
+// import { PlatformFeature } from '@/lib/platform/types'
 import { DeleteAllThreadsDialog } from '@/containers/dialogs'
 
 const mainMenus = [

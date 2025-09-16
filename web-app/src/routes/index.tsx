@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { createFileRoute, useSearch } from '@tanstack/react-router'
 import ChatInput from '@/containers/ChatInput'
-import HeaderPage from '@/containers/HeaderPage'
+// import HeaderPage from '@/containers/HeaderPage'
 import { useTranslation } from '@/i18n/react-i18next-compat'
 import { useTools } from '@/hooks/useTools'
 
@@ -15,7 +15,7 @@ type SearchParams = {
     provider: string
   }
 }
-import DropdownAssistant from '@/containers/DropdownAssistant'
+// import DropdownAssistant from '@/containers/DropdownAssistant'
 import { useEffect } from 'react'
 import { useThreads } from '@/hooks/useThreads'
 
@@ -53,9 +53,9 @@ function Index() {
 
   return (
     <div className="flex h-full flex-col flex-justify-center">
-      <HeaderPage>
-        <DropdownAssistant />
-      </HeaderPage>
+      {/* <HeaderPage> */}
+      {/*   <DropdownAssistant /> */}
+      {/* </HeaderPage> */}
       <div className="h-full px-4 md:px-8 overflow-y-auto flex flex-col gap-2 justify-center">
         <div className="w-full md:w-4/6 mx-auto">
           <div className="mb-8 text-center">

@@ -30,10 +30,12 @@ import { useAssistant } from '@/hooks/useAssistant'
 import { useAppState } from '@/hooks/useAppState'
 import { MovingBorder } from './MovingBorder'
 import { useChat } from '@/hooks/useChat'
-import DropdownModelProvider from '@/containers/DropdownModelProvider'
+// import DropdownModelProvider from '@/containers/DropdownModelProvider'
 import { ModelLoader } from '@/containers/loaders/ModelLoader'
 import DropdownToolsAvailable from '@/containers/DropdownToolsAvailable'
 import { useServiceHub } from '@/hooks/useServiceHub'
+import ModeDropdownProvider from '@/containers/ModeDropdownProvider'
+import AllowAllMCPSwitch from './AllowAllMCPSwitch'
 
 type ChatInputProps = {
   className?: string
@@ -595,10 +597,14 @@ const ChatInput = ({ model, className, initialMessage }: ChatInputProps) => {
                 {model?.provider === 'llamacpp' && loadingModel ? (
                   <ModelLoader />
                 ) : (
-                  <DropdownModelProvider
-                    model={model}
-                    useLastUsedModel={initialMessage}
-                  />
+                  <>
+                    {/* <DropdownModelProvider */}
+                    {/*   model={model} */}
+                    {/*   useLastUsedModel={initialMessage} */}
+                    {/* /> */}
+                    <ModeDropdownProvider useLastUsedModel={initialMessage} />
+                    <AllowAllMCPSwitch />
+                  </>
                 )}
                 {/* File attachment - show only for models with mmproj */}
                 {hasMmproj && (
