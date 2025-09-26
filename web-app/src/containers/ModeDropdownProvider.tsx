@@ -13,8 +13,8 @@ type DropdownModelProviderProps = {
 }
 
 // The id needs to be changed based on requirement.
-const ASK_MODEL = { id: 'aagno-agent-default', label: 'Ask' }
-const AGENT_MODEL = { id: 'aagno-agent-default', label: 'Agent' }
+const ASK_MODEL = { id: 'agno-agent-default', label: 'Ask' }
+const AGENT_MODEL = { id: 'agno-agent-default', label: 'Agent' }
 
 const ModeDropdownProvider = ({
   useLastUsedModel = false,

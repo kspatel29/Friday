@@ -42,12 +42,12 @@ const mainMenus = [
     route: route.home,
     isEnabled: true,
   },
-  {
-    title: 'common:assistants',
-    icon: IconClipboardSmileFilled,
-    route: route.assistant,
-    isEnabled: true,
-  },
+  // {
+  //   title: 'common:assistants',
+  //   icon: IconClipboardSmileFilled,
+  //   route: route.assistant,
+  //   isEnabled: true,
+  // },
   // {
   //   title: 'common:hub',
   //   icon: IconAppsFilled,

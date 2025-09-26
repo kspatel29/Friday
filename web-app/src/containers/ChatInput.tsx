@@ -35,7 +35,7 @@ import { ModelLoader } from '@/containers/loaders/ModelLoader'
 import DropdownToolsAvailable from '@/containers/DropdownToolsAvailable'
 import { useServiceHub } from '@/hooks/useServiceHub'
 import ModeDropdownProvider from '@/containers/ModeDropdownProvider'
-import AllowAllMCPSwitch from './AllowAllMCPSwitch'
+// import DropdownModelProvider from './DropdownModelProvider'
 
 type ChatInputProps = {
   className?: string
@@ -598,12 +598,12 @@ const ChatInput = ({ model, className, initialMessage }: ChatInputProps) => {
                   <ModelLoader />
                 ) : (
                   <>
-                    {/* <DropdownModelProvider */}
-                    {/*   model={model} */}
-                    {/*   useLastUsedModel={initialMessage} */}
-                    {/* /> */}
+                    {/* <DropdownModelProvider
+                      model={model}
+                      useLastUsedModel={initialMessage}
+                    /> */}
                     <ModeDropdownProvider useLastUsedModel={initialMessage} />
-                    <AllowAllMCPSwitch />
+                    {/* <AllowAllMCPSwitch /> */}
                   </>
                 )}
                 {/* File attachment - show only for models with mmproj */}
@@ -691,13 +691,19 @@ const ChatInput = ({ model, className, initialMessage }: ChatInputProps) => {
                                   className="text-main-view-fg/30"
                                 />
                                 {/* Show count of enabled tools */}
-                                {currentAssistant?.enabledMCPTools && currentAssistant.enabledMCPTools.length > 0 && (
-                                  <div className="absolute -top-2 -right-2 bg-accent text-accent-fg text-xs rounded-full size-5 flex items-center justify-center font-medium opacity-50">
-                                    <span className="leading-0 text-xs">
-                                      {currentAssistant.enabledMCPTools.length > 99 ? '99+' : currentAssistant.enabledMCPTools.length}
-                                    </span>
-                                  </div>
-                                )}
+                                {currentAssistant?.enabledMCPTools &&
+                                  currentAssistant.enabledMCPTools.length >
+                                    0 && (
+                                    <div className="absolute -top-2 -right-2 bg-accent text-accent-fg text-xs rounded-full size-5 flex items-center justify-center font-medium opacity-50">
+                                      <span className="leading-0 text-xs">
+                                        {currentAssistant.enabledMCPTools
+                                          .length > 99
+                                          ? '99+'
+                                          : currentAssistant.enabledMCPTools
+                                              .length}
+                                      </span>
+                                    </div>
+                                  )}
                                 <div className="absolute -top-1 -right-1 bg-amber-500 text-white text-xs rounded-full size-3 flex items-center justify-center">
                                   🔒
                                 </div>
@@ -729,7 +735,9 @@ const ChatInput = ({ model, className, initialMessage }: ChatInputProps) => {
                                       {toolsCount > 0 && (
                                         <div className="absolute -top-2 -right-2 bg-accent text-accent-fg text-xs rounded-full size-5 flex items-center justify-center font-medium">
                                           <span className="leading-0 text-xs">
-                                            {toolsCount > 99 ? '99+' : toolsCount}
+                                            {toolsCount > 99
+                                              ? '99+'
+                                              : toolsCount}
                                           </span>
                                         </div>
                                       )}
@@ -741,7 +749,11 @@ const ChatInput = ({ model, className, initialMessage }: ChatInputProps) => {
                           </div>
                         </TooltipTrigger>
                         <TooltipContent>
-                          <p>{areToolsLocked ? 'Tools locked by assistant' : t('tools')}</p>
+                          <p>
+                            {areToolsLocked
+                              ? 'Tools locked by assistant'
+                              : t('tools')}
+                          </p>
                         </TooltipContent>
                       </Tooltip>
                     </TooltipProvider>

@@ -10,7 +10,7 @@ import { useNavigate } from '@tanstack/react-router'
 import { IconCirclePlus, IconSettings } from '@tabler/icons-react'
 import { getProviderTitle } from '@/lib/utils'
 import ProvidersAvatar from '@/containers/ProvidersAvatar'
-import { AddProviderDialog } from '@/containers/dialogs'
+// import { AddProviderDialog } from '@/containers/dialogs'
 import { Switch } from '@/components/ui/switch'
 import { useCallback } from 'react'
 import { openAIProviderSettings } from '@/consts/providers'
@@ -100,7 +100,7 @@ function ModelProviders() {
                   <span className="text-main-view-fg font-medium text-base">
                     {t('common:modelProviders')}
                   </span>
-                  <AddProviderDialog onCreateProvider={createProvider}>
+                  {/* <AddProviderDialog onCreateProvider={createProvider}>
                     <Button
                       variant="link"
                       size="sm"
@@ -111,7 +111,7 @@ function ModelProviders() {
                         <span>{t('provider:addProvider')}</span>
                       </div>
                     </Button>
-                  </AddProviderDialog>
+                  </AddProviderDialog> */}
                 </div>
               }
             >

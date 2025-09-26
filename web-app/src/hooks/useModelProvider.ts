@@ -26,7 +26,8 @@ export const useModelProvider = create<ModelProviderState>()(
   persist(
     (set, get) => ({
       providers: [],
-      selectedProvider: 'llamacpp',
+      // selectedProvider: 'llamacpp',
+      selectedProvider: 'agno-agent-default',
       selectedModel: null,
       deletedModels: [],
       getModelBy: (modelId: string) => {
