@@ -150,14 +150,14 @@ type AgentEvent =
  * Integrates with @ag-ui/client to communicate with your Agno agent backend
  */
 export class AgnoAgentEngine extends AIEngine {
-  readonly provider = 'agno-agent'
+  readonly provider = 'gamewave-agent'
 
   private baseUrl: string
   private apiKey?: string
   private loadedModels = new Set<string>()
 
   constructor(baseUrl: string, apiKey?: string) {
-    super('agno-agent', '1.0.0')
+    super('gamewave-agent', '1.0.0')
     this.baseUrl = baseUrl
     this.apiKey = apiKey
     console.log('AgnoAgentEngine constructed with baseUrl:', baseUrl)
@@ -175,32 +175,42 @@ export class AgnoAgentEngine extends AIEngine {
    * List available models/agents
    */
   async list(): Promise<modelInfo[]> {
-    // Return the predefined model from the provider configuration
-    // instead of trying to fetch from backend endpoint
     return [
       {
-        id: 'agno-agent-default',
-        name: 'Agno Agent',
-        providerId: this.provider,
-        port: 0, // Not applicable for remote agents
-        sizeBytes: 0, // Not applicable for remote agents
-        tags: ['agno', 'agent', 'custom'],
-      }
+        id: 'Agent',
+        name: 'GameWave Agent',
+        description: 'Can perform actions in your unreal engine',
+        capabilities: ['completion', 'tools'],
+        version: '1.0',
+        providerId: 'gamewave-agent',
+        port: 0,
+        sizeBytes: 0,
+      },
+      {
+        id: 'Ask',
+        name: 'GameWave Agent',
+        description: 'Cannot perform actions in your unreal engine',
+        capabilities: ['completion', 'tools'],
+        version: '1.0',
+        providerId: 'gamewave-agent',
+        port: 0,
+        sizeBytes: 0,
+      },
     ]
   }
+  
 
   /**
    * Load a model/agent (for Agno agents, this is typically a no-op)
    */
   async load(modelId: string, _settings?: any): Promise<SessionInfo> {
-    // For remote agents, "loading" is typically just marking as available
     this.loadedModels.add(modelId)
 
     return {
-      pid: Date.now(), // Use timestamp as pseudo-PID
-      port: 0, // Not applicable for remote agents
+      pid: Date.now(), 
+      port: 0, 
       model_id: modelId,
-      model_path: '', // Not applicable for remote agents
+      model_path: '', 
       api_key: this.apiKey || '',
     }
   }
@@ -224,11 +234,8 @@ export class AgnoAgentEngine extends AIEngine {
     return Array.from(this.loadedModels)
   }
 
-  /**
-   * Check if tools are supported (Agno agents typically support tools)
-   */
   async isToolSupported(_modelId: string): Promise<boolean> {
-    return true // Agno agents support tools via the @ag-ui framework
+    return true 
   }
 
   /**
@@ -249,7 +256,8 @@ export class AgnoAgentEngine extends AIEngine {
     const convertedTools = this.convertToolsToAgentFormat(opts.tools || [])
     console.log('Converted tools for agent:', convertedTools)
 
-    const agentInput: RunAgentInput = {
+    const agentInput: RunAgentInput & { mode?: string } = {
+      mode: opts.model.toLowerCase(), // This will be 'ask' or 'agent'
       threadId,
       runId,
       state: {}, // You can customize this based on your agent's state needs
@@ -276,12 +284,11 @@ export class AgnoAgentEngine extends AIEngine {
     abortController?: AbortController
   ): AsyncIterable<chatCompletionChunk> {
     try {
-      const response = await fetch(`${this.baseUrl}/agui`, {
+      const response = await fetch(`${this.baseUrl}`, {
         method: 'POST',
         headers: {
           ...this.getHeaders(),
           'Accept': 'text/event-stream',
-          'Cache-Control': 'no-cache',
         },
         body: JSON.stringify(agentInput),
         signal: abortController?.signal,
@@ -444,7 +451,7 @@ export class AgnoAgentEngine extends AIEngine {
     abortController?: AbortController
   ): Promise<chatCompletion> {
     try {
-      const response = await fetch(`${this.baseUrl}/v1/agui`, {
+      const response = await fetch(`${this.baseUrl}`, {
         method: 'POST',
         headers: this.getHeaders(),
         body: JSON.stringify(agentInput),
@@ -462,7 +469,7 @@ export class AgnoAgentEngine extends AIEngine {
         id: ulid(),
         object: 'chat.completion',
         created: Math.floor(Date.now() / 1000),
-        model: agentInput.forwardedProps.model || 'agno-agent',
+        model: agentInput.forwardedProps.model || 'gamewave-agent',
         choices: [{
           index: 0,
           message: {
@@ -498,7 +505,7 @@ export class AgnoAgentEngine extends AIEngine {
       id: messageId,
       object: 'chat.completion.chunk',
       created: Math.floor(Date.now() / 1000),
-      model: 'agno-agent',
+      model: 'gamewave-agent',
       choices: [{
         index: 0,
         delta: {

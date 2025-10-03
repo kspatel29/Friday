@@ -116,8 +116,8 @@ function ModelProviders() {
               }
             >
               {providers.map((provider, index) => {
-                // Below Line Adds Filter to only view agno-agent without hampering funcitonality
-                if (provider.provider !== 'agno-agent') return <></>
+                // Below Line Adds Filter to only view gamewave-agent without hampering funcitonality
+                if (provider.provider !== 'gamewave-agent') return <></>
                 return (
                   <CardItem
                     key={index}

@@ -9,6 +9,7 @@ type ModelProviderState = {
   selectedProvider: string
   selectedModel: Model | null
   deletedModels: string[]
+  registeredEngines: Record<string, boolean> 
   getModelBy: (modelId: string) => Model | undefined
   setProviders: (providers: ModelProvider[]) => void
   getProviderByName: (providerName: string) => ModelProvider | undefined
@@ -20,6 +21,7 @@ type ModelProviderState = {
   addProvider: (provider: ModelProvider) => void
   deleteProvider: (providerName: string) => void
   deleteModel: (modelId: string) => void
+  setEngineRegistered: (engineName: string, isRegistered: boolean) => void
 }
 
 export const useModelProvider = create<ModelProviderState>()(
@@ -27,9 +29,18 @@ export const useModelProvider = create<ModelProviderState>()(
     (set, get) => ({
       providers: [],
       // selectedProvider: 'llamacpp',
-      selectedProvider: 'agno-agent-default',
+      selectedProvider: 'gamewave-agent',
       selectedModel: null,
       deletedModels: [],
+      registeredEngines: {},
+      setEngineRegistered: (engineName, isRegistered) => { // *** 4. ADD ACTION IMPLEMENTATION ***
+        set((state) => ({
+          registeredEngines: {
+            ...state.registeredEngines,
+            [engineName]: isRegistered,
+          },
+        }))
+      },
       getModelBy: (modelId: string) => {
         const provider = get().providers.find(
           (provider) => provider.provider === get().selectedProvider
@@ -216,6 +227,10 @@ export const useModelProvider = create<ModelProviderState>()(
     {
       name: localStorageKey.modelProvider,
       storage: createJSONStorage(() => localStorage),
+      partialize: (state) =>
+        Object.fromEntries(
+          Object.entries(state).filter(([key]) => !['registeredEngines'].includes(key))
+        ),
       migrate: (persistedState: unknown, version: number) => {
         const state = persistedState as ModelProviderState & {
           providers: Array<

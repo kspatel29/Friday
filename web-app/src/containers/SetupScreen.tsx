@@ -12,7 +12,7 @@ function SetupScreen() {
   // const { providers } = useModelProvider()
   // const firstItemRemoteProvider =
   //   providers.length > 0 ? providers[1]?.provider : 'openai'
-  const firstItemRemoteProvider = 'agno-agent'
+  const firstItemRemoteProvider = 'gamewave-agent'
 
   // Check if setup tour has been completed
   const isSetupCompleted =

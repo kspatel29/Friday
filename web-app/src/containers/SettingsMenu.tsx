@@ -198,7 +198,7 @@ const SettingsMenu = () => {
                   <div className="ml-2 mt-1 space-y-1 first-step-setup-remote-provider">
                     {activeProviders.map((provider) => {
                       // Filter to hide agent if provider isn't Agno Agent
-                      if (provider.provider !== 'agno-agent') return <></>
+                      if (provider.provider !== 'gamewave-agent') return <></>
                       const isActive = matches.some(
                         (match) =>
                           match.routeId ===

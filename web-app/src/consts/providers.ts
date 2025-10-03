@@ -344,13 +344,13 @@ export const predefinedProviders = [
   {
     active: true,
     api_key: '',
-    base_url: 'http://127.0.0.1:8000', // Your Agno agent backend URL
-    provider: 'agno-agent',
+    base_url: 'https://mowbjvvzgrerertijhql.supabase.co/functions/v1/friday-agent-proxy',
+    // provider: 'gamewave-agent',
     settings: [
       {
         key: 'api-key',
         title: 'API Key',
-        description: 'Your Agno agent API key (if required)',
+        description: 'Your Gamewave agent API key',
         controller_type: 'input',
         controller_props: { 
           placeholder: 'Enter your API key...',
@@ -359,23 +359,27 @@ export const predefinedProviders = [
           input_actions: ['unobscure', 'copy'],
         },
       },
-      {
-        key: 'base-url', 
-        title: 'Base URL',
-        description: 'The base URL for your Agno agent backend',
-        controller_type: 'input',
-        controller_props: { 
-          placeholder: 'http://localhost:8000',
-          value: 'http://127.0.0.1:8000',
-        },
-      },
     ],
     models: [
       {
-        id: 'agno-agent-default',
-        name: 'Agno Agent',
-        description: 'Your custom Agno agent implementation',
-        capabilities: ['completion', 'tools'], // Supports both chat and tools
+        id: 'Agent',
+        name: 'GameWave Agent',
+        description: 'Can perform actions in your unreal engine',
+        capabilities: ['completion', 'tools'],
+        version: '1.0',
+        providerId: 'gamewave-agent',
+        port: 0,
+        sizeBytes: 0,
+      },
+      {
+        id: 'Ask',
+        name: 'GameWave Agent',
+        description: 'Cannot perform actions in your unreal engine',
+        capabilities: ['completion', 'tools'],
+        version: '1.0',
+        providerId: 'gamewave-agent',
+        port: 0,
+        sizeBytes: 0,
       },
     ],
   }

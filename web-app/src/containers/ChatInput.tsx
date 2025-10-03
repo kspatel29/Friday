@@ -668,6 +668,7 @@ const ChatInput = ({ model, className, initialMessage }: ChatInputProps) => {
                           disabled={dropdownToolsAvailable || areToolsLocked}
                         >
                           <div
+                            className="hidden"
                             onClick={(e) => {
                               if (areToolsLocked) {
                                 e.preventDefault()

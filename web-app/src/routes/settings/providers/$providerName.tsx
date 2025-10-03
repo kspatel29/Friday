@@ -23,7 +23,7 @@ import { ImportVisionModelDialog } from '@/containers/dialogs/ImportVisionModelD
 import Joyride, { CallBackProps, STATUS } from 'react-joyride'
 import { CustomTooltipJoyRide } from '@/containers/CustomeTooltipJoyRide'
 import { route } from '@/constants/routes'
-import DeleteProvider from '@/containers/dialogs/DeleteProvider'
+// import DeleteProvider from '@/containers/dialogs/DeleteProvider'
 import { useServiceHub } from '@/hooks/useServiceHub'
 import { localStorageKey } from '@/constants/localStorage'
 import { Button } from '@/components/ui/button'
@@ -41,6 +41,7 @@ import { useLlamacppDevices } from '@/hooks/useLlamacppDevices'
 import { PlatformFeatures } from '@/lib/platform/const'
 import { PlatformFeature } from '@/lib/platform/types'
 import { useBackendUpdater } from '@/hooks/useBackendUpdater'
+import { registerAgnoAgent } from '@/lib/engines/register-agno'
 
 // as route.threadsDetail
 export const Route = createFileRoute('/settings/providers/$providerName')({
@@ -196,6 +197,18 @@ function ProviderDetail() {
       return () => clearInterval(intervalId)
     }
   }, [provider, needsBackendConfig, refreshSettings])
+
+  // Register AgnoAgentEngine if API key is present for gamewave-agent, sync settings first
+  useEffect(() => {
+    if (provider?.provider === 'gamewave-agent' && provider.api_key && provider.settings) {
+      serviceHub.providers().updateSettings(providerName, provider.settings).then(() => {
+        registerAgnoAgent(provider.base_url, provider.api_key)
+      }).catch((error) => {
+        console.error('Failed to sync provider settings:', error)
+        registerAgnoAgent(provider.base_url, provider.api_key)
+      })
+    }
+  }, [provider, serviceHub, providerName])
 
   // Note: settingsChanged event is now handled globally in GlobalEventHandler
   // This ensures all screens receive the event intermediately
@@ -546,6 +559,11 @@ function ProviderDetail() {
                                   ...updateObj,
                                 })
 
+                                // Register or update AgnoAgentEngine if API key changed for gamewave-agent
+                                if (provider.provider === 'gamewave-agent' && settingKey === 'api-key' && typeof newValue === 'string' && newValue.trim()) {
+                                  registerAgnoAgent(provider.base_url, newValue)
+                                }
+
                                 serviceHub.models().stopAllModels()
                               }
                             }}
@@ -663,7 +681,7 @@ function ProviderDetail() {
                     )
                   })}
 
-                  <DeleteProvider provider={provider} />
+                  {/* <DeleteProvider provider={provider} /> */}
                 </Card>
 
                 {/* Models */}
