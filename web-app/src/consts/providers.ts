@@ -345,12 +345,12 @@ export const predefinedProviders = [
     active: true,
     api_key: '',
     base_url: 'https://mowbjvvzgrerertijhql.supabase.co/functions/v1/friday-agent-proxy',
-    // provider: 'gamewave-agent',
+    provider: 'gamewave-agent',
     settings: [
       {
         key: 'api-key',
         title: 'API Key',
-        description: 'Your Gamewave agent API key',
+        description: 'Your Gamewave agent API key. GRAB APIKEY FROM [gamewave.dev](https://gamewave.dev).',
         controller_type: 'input',
         controller_props: { 
           placeholder: 'Enter your API key...',

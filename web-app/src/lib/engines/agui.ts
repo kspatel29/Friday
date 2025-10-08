@@ -1,153 +1,29 @@
-import { AIEngine, chatCompletionRequest, chatCompletion, chatCompletionChunk, SessionInfo, UnloadResult, modelInfo } from '@janhq/core'
+import {
+  AIEngine,
+  chatCompletion,
+  chatCompletionChunk,
+  chatCompletionRequest,
+  modelInfo,
+  SessionInfo,
+  UnloadResult,
+} from '@janhq/core'
+import { useModelProvider } from '@/hooks/useModelProvider'
+import { ChatCompletionMessageToolCall } from 'openai/resources'
 import { ulid } from 'ulidx'
+import { getServiceHub } from '@/hooks/useServiceHub'
 
-// Types from @ag-ui/core
-interface RunAgentInput {
-  threadId: string
-  runId: string
-  state: any
-  messages: Message[]
-  tools: Tool[]
-  context: Context[]
-  forwardedProps: any
-}
+type ToolCallResult =
+  | string
+  | {
+      content?: string | Array<string | { text?: string } | Record<string, unknown>>
+      error?: string
+      [key: string]: unknown
+    }
 
-interface Message {
-  id: string
-  role: "developer" | "system" | "assistant" | "user" | "tool"
-  content?: string
-  name?: string
-  toolCalls?: ToolCall[]
-  toolCallId?: string
-  error?: string
-}
-
-interface ToolCall {
-  id: string
-  type: "function"
-  function: FunctionCall
-}
-
-interface FunctionCall {
-  name: string
-  arguments: string
-}
-
-interface Tool {
-  name: string
-  description: string
-  parameters: any // JSON Schema
-}
-
-interface Context {
-  description: string
-  value: string
-}
-
-// Event types from @ag-ui/core
-enum EventType {
-  TEXT_MESSAGE_START = "TEXT_MESSAGE_START",
-  TEXT_MESSAGE_CONTENT = "TEXT_MESSAGE_CONTENT",
-  TEXT_MESSAGE_END = "TEXT_MESSAGE_END",
-  TOOL_CALL_START = "TOOL_CALL_START",
-  TOOL_CALL_ARGS = "TOOL_CALL_ARGS",
-  TOOL_CALL_END = "TOOL_CALL_END",
-  TOOL_CALL_RESULT = "TOOL_CALL_RESULT",
-  STATE_SNAPSHOT = "STATE_SNAPSHOT",
-  STATE_DELTA = "STATE_DELTA",
-  MESSAGES_SNAPSHOT = "MESSAGES_SNAPSHOT",
-  RAW = "RAW",
-  CUSTOM = "CUSTOM",
-  RUN_STARTED = "RUN_STARTED",
-  RUN_FINISHED = "RUN_FINISHED",
-  RUN_ERROR = "RUN_ERROR",
-  STEP_STARTED = "STEP_STARTED",
-  STEP_FINISHED = "STEP_FINISHED",
-}
-
-interface BaseEvent {
-  type: EventType
-  timestamp?: number
-  rawEvent?: any
-}
-
-interface TextMessageStartEvent extends BaseEvent {
-  type: EventType.TEXT_MESSAGE_START
-  messageId: string
-  role: "assistant"
-}
-
-interface TextMessageContentEvent extends BaseEvent {
-  type: EventType.TEXT_MESSAGE_CONTENT
-  messageId: string
-  delta: string
-}
-
-interface TextMessageEndEvent extends BaseEvent {
-  type: EventType.TEXT_MESSAGE_END
-  messageId: string
-}
-
-interface ToolCallStartEvent extends BaseEvent {
-  type: EventType.TOOL_CALL_START
-  toolCallId: string
-  toolCallName: string
-  parentMessageId?: string
-}
-
-interface ToolCallArgsEvent extends BaseEvent {
-  type: EventType.TOOL_CALL_ARGS
-  toolCallId: string
-  delta: string
-}
-
-interface ToolCallEndEvent extends BaseEvent {
-  type: EventType.TOOL_CALL_END
-  toolCallId: string
-}
-
-interface ToolCallResultEvent extends BaseEvent {
-  type: EventType.TOOL_CALL_RESULT
-  messageId: string
-  toolCallId: string
-  content: string
-  role?: "tool"
-}
-
-interface RunStartedEvent extends BaseEvent {
-  type: EventType.RUN_STARTED
-  threadId: string
-  runId: string
-}
-
-interface RunFinishedEvent extends BaseEvent {
-  type: EventType.RUN_FINISHED
-  threadId: string
-  runId: string
-  result?: any
-}
-
-interface RunErrorEvent extends BaseEvent {
-  type: EventType.RUN_ERROR
-  message: string
-  code?: string
-}
-
-type AgentEvent =
-  | TextMessageStartEvent
-  | TextMessageContentEvent
-  | TextMessageEndEvent
-  | ToolCallStartEvent
-  | ToolCallArgsEvent
-  | ToolCallEndEvent
-  | ToolCallResultEvent
-  | RunStartedEvent
-  | RunFinishedEvent
-  | RunErrorEvent
+type AgentMapping = { type: 'team' | 'agent'; id: string }
 
 /**
- * Agno Agent Engine Implementation
- * Integrates with @ag-ui/client to communicate with your Agno agent backend
+ * Agno Agent Engine wired to new Supabase proxy backend.
  */
 export class AgnoAgentEngine extends AIEngine {
   readonly provider = 'gamewave-agent'
@@ -155,25 +31,89 @@ export class AgnoAgentEngine extends AIEngine {
   private baseUrl: string
   private apiKey?: string
   private loadedModels = new Set<string>()
+  private sessionMap = new Map<string, string>()
+  private runMap = new Map<string, string>()
+  private agentMap = new Map<string, AgentMapping>()
+  private processedToolCalls = new Set<string>()
+  private pendingToolMetadata = new Map<
+    string,
+    Array<{
+      tool_call_id: string
+      tool_name: string
+      tool_args: Record<string, unknown>
+    }>
+  >()
+  private continuationChunkQueues = new Map<string, chatCompletionChunk[]>()
 
   constructor(baseUrl: string, apiKey?: string) {
     super('gamewave-agent', '1.0.0')
     this.baseUrl = baseUrl
     this.apiKey = apiKey
-    console.log('AgnoAgentEngine constructed with baseUrl:', baseUrl)
+    console.log('AgnoAgentEngine initialized with baseUrl:', baseUrl)
   }
 
-  /**
-   * On extension unload
-   */
+  updateConfig(baseUrl?: string, apiKey?: string) {
+    if (typeof baseUrl === 'string' && baseUrl.trim()) {
+      this.baseUrl = baseUrl
+    }
+    if (apiKey !== undefined) {
+      this.apiKey = apiKey?.trim() ? apiKey : undefined
+    }
+  }
+
+  private enqueueToolMetadata(
+    sessionId: string,
+    tool: {
+      tool_call_id: string
+      tool_name: string
+      tool_args: Record<string, unknown>
+    }
+  ) {
+    const queue = this.pendingToolMetadata.get(sessionId) ?? []
+    queue.push(tool)
+    this.pendingToolMetadata.set(sessionId, queue)
+  }
+
+  private dequeueToolMetadata(
+    sessionId: string
+  ): Array<{
+    tool_call_id: string
+    tool_name: string
+    tool_args: Record<string, unknown>
+  }> {
+    const queue = this.pendingToolMetadata.get(sessionId) ?? []
+    this.pendingToolMetadata.delete(sessionId)
+    return queue
+  }
+
+  private enqueueContinuationChunk(
+    sessionId: string,
+    chunk: chatCompletionChunk
+  ) {
+    const queue = this.continuationChunkQueues.get(sessionId) ?? []
+    queue.push(chunk)
+    this.continuationChunkQueues.set(sessionId, queue)
+  }
+
+  private drainContinuationChunks(sessionId: string): chatCompletionChunk[] {
+    const queue = this.continuationChunkQueues.get(sessionId)
+    if (!queue || queue.length === 0) {
+      return []
+    }
+    this.continuationChunkQueues.delete(sessionId)
+    return queue
+  }
+
   onUnload(): void {
-    // Cleanup any resources if needed
     this.loadedModels.clear()
+    this.sessionMap.clear()
+    this.runMap.clear()
+    this.agentMap.clear()
+    this.processedToolCalls.clear()
+    this.pendingToolMetadata.clear()
+    this.continuationChunkQueues.clear()
   }
 
-  /**
-   * List available models/agents
-   */
   async list(): Promise<modelInfo[]> {
     return [
       {
@@ -188,9 +128,9 @@ export class AgnoAgentEngine extends AIEngine {
       },
       {
         id: 'Ask',
-        name: 'GameWave Agent',
+        name: 'GameWave Ask',
         description: 'Cannot perform actions in your unreal engine',
-        capabilities: ['completion', 'tools'],
+        capabilities: ['completion'],
         version: '1.0',
         providerId: 'gamewave-agent',
         port: 0,
@@ -198,392 +138,707 @@ export class AgnoAgentEngine extends AIEngine {
       },
     ]
   }
-  
 
-  /**
-   * Load a model/agent (for Agno agents, this is typically a no-op)
-   */
-  async load(modelId: string, _settings?: any): Promise<SessionInfo> {
+  async load(modelId: string): Promise<SessionInfo> {
     this.loadedModels.add(modelId)
-
     return {
-      pid: Date.now(), 
-      port: 0, 
+      pid: Date.now(),
+      port: 0,
       model_id: modelId,
-      model_path: '', 
-      api_key: this.apiKey || '',
+      model_path: '',
+      api_key: this.resolveApiKey() || '',
     }
   }
 
-  /**
-   * Unload a model/agent
-   */
   async unload(sessionId: string): Promise<UnloadResult> {
-    // Extract model ID from session (in real implementation, you'd track this properly)
     this.loadedModels.delete(sessionId)
-
-    return {
-      success: true,
-    }
+    this.sessionMap.delete(sessionId)
+    this.runMap.delete(sessionId)
+    this.agentMap.delete(sessionId)
+    return { success: true }
   }
 
-  /**
-   * Get currently loaded models
-   */
   async getLoadedModels(): Promise<string[]> {
     return Array.from(this.loadedModels)
   }
 
-  async isToolSupported(_modelId: string): Promise<boolean> {
-    return true 
+  async isToolSupported(): Promise<boolean> {
+    return true
   }
 
-  /**
-   * Main chat method - handles communication with Agno agent
-   */
   async chat(
     opts: chatCompletionRequest,
     abortController?: AbortController
   ): Promise<chatCompletion | AsyncIterable<chatCompletionChunk>> {
-    console.log('AgnoAgentEngine.chat called with opts:', opts)
-    console.log('Tools received:', opts.tools)
-    console.log('Tools length:', opts.tools?.length || 0)
+    console.log('Chat initiated with opts:', opts)
 
-    const runId = ulid()
-    const threadId = opts.messages?.[0]?.role === 'system' ? ulid() : ulid()
+    const conversationKey =
+      (opts as any).conversationId || (opts as any).threadId || opts.model
 
-    // Convert OpenAI format to Agno agent format
-    const convertedTools = this.convertToolsToAgentFormat(opts.tools || [])
-    console.log('Converted tools for agent:', convertedTools)
-
-    const agentInput: RunAgentInput & { mode?: string } = {
-      mode: opts.model.toLowerCase(), // This will be 'ask' or 'agent'
-      threadId,
-      runId,
-      state: {}, // You can customize this based on your agent's state needs
-      messages: this.convertMessagesToAgentFormat(opts.messages || []),
-      tools: convertedTools,
-      context: [], // Add context if needed
-      forwardedProps: opts, // Forward original request
+    let sessionId = this.sessionMap.get(conversationKey)
+    if (!sessionId) {
+      sessionId = ulid()
+      this.sessionMap.set(conversationKey, sessionId)
+      console.log(`Created new session ${sessionId} for conversation ${conversationKey}`)
     }
 
-    console.log('Full agent input being sent:', JSON.stringify(agentInput, null, 2))
+    const modelMap: Record<string, AgentMapping> = {
+      Agent: { type: 'team', id: 'unreal_team' },
+      Ask: { type: 'team', id: 'unreal_ask_team' },
+    }
+
+    const mapping = modelMap[opts.model] || { type: 'team', id: opts.model }
+    this.agentMap.set(sessionId, mapping)
+
+    const formData = new FormData()
+
+    const lastUserMessage = this.getLastUserMessage(opts)
+    if (!lastUserMessage) {
+      throw new Error('No valid user message found to send to backend')
+    }
+
+    formData.append('message', lastUserMessage)
+    formData.append('session_id', sessionId)
+    formData.append('stream', opts.stream === false ? 'false' : 'true')
+
+    const url = new URL(this.baseUrl)
+    if (mapping.type === 'team') {
+      url.searchParams.set('team_id', mapping.id)
+    }
 
     if (opts.stream !== false) {
-      return this.createStreamingResponse(agentInput, abortController)
-    } else {
-      return this.createNonStreamingResponse(agentInput, abortController)
+      return this.streamResponse(url.toString(), formData, sessionId, mapping.id, abortController)
     }
+
+    formData.set('stream', 'false')
+    return this.nonStreamResponse(url.toString(), formData, mapping.id, abortController)
   }
 
-  /**
-   * Create streaming response using Server-Sent Events
-   */
-  private async *createStreamingResponse(
-    agentInput: RunAgentInput,
+  private async *streamResponse(
+    url: string,
+    formData: FormData,
+    sessionId: string,
+    modelId: string,
     abortController?: AbortController
   ): AsyncIterable<chatCompletionChunk> {
+    const pendingToolTasks: Promise<void>[] = []
+    const bufferedChunks: chatCompletionChunk[] = []
+    let reader: ReadableStreamDefaultReader<Uint8Array> | undefined
+
     try {
-      const response = await fetch(`${this.baseUrl}`, {
+      const response = await fetch(url, {
         method: 'POST',
-        headers: {
-          ...this.getHeaders(),
-          'Accept': 'text/event-stream',
-        },
-        body: JSON.stringify(agentInput),
+        headers: this.getHeaders(),
+        body: formData,
         signal: abortController?.signal,
       })
 
       if (!response.ok) {
-        throw new Error(`Agent request failed: ${response.statusText}`)
+        const errorText = await response.text()
+        console.error(`Request failed: ${response.status} - ${errorText}`)
+        throw new Error(`Request failed: ${response.status} - ${errorText}`)
       }
 
-      const reader = response.body?.getReader()
-      if (!reader) {
-        throw new Error('No response body reader available')
-      }
+      reader = response.body?.getReader()
+      if (!reader) throw new Error('No response body')
 
       const decoder = new TextDecoder()
       let buffer = ''
-      let messageId = ulid()
-      let toolCalls: any[] = []
+      const messageId = ulid()
+      let isFirstChunk = true
+      let completed = false
 
-      try {
-        while (true) {
-          const { done, value } = await reader.read()
+      while (!completed) {
+        const { done, value } = await reader.read()
+        if (done) break
 
-          if (done) break
-          if (abortController?.signal.aborted) break
+        buffer += decoder.decode(value, { stream: true })
+        const lines = buffer.split('\n')
+        buffer = lines.pop() || ''
 
-          buffer += decoder.decode(value, { stream: true })
-          const lines = buffer.split('\n')
-          buffer = lines.pop() || ''
+        for (const rawLine of lines) {
+          const line = rawLine.trim()
+          if (!line) continue
 
-          for (const line of lines) {
-            if (line.startsWith('data: ')) {
-              const eventData = line.slice(6)
+          let eventData = ''
+          if (line.startsWith('data: ')) {
+            eventData = line.slice(6).trim()
+          } else if (line.startsWith('{')) {
+            eventData = line
+          }
 
-              if (eventData === '[DONE]') {
-                // This case is unlikely to be hit if RUN_FINISHED is used, but good for safety
-                const finishReason = toolCalls.length > 0 ? 'tool_calls' : 'stop'
-                yield this.createCompletionChunk(messageId, '', finishReason, undefined)
-                return
+          if (!eventData || eventData === '[DONE]') continue
+
+          try {
+            const event = JSON.parse(eventData)
+            const eventName = typeof event.event === 'string' ? event.event : undefined
+
+            if (event.run_id) {
+              const agentId = event.agent_id || event.agentId || event.agent?.id
+              const isAgentRun = typeof agentId === 'string' && agentId.trim().length > 0
+
+              if (isAgentRun && (eventName === 'RunStarted' || eventName === 'RunPaused' || eventName === 'RunContent')) {
+                this.runMap.set(sessionId, event.run_id)
+                console.log(`Updated agent run_id ${event.run_id} for session ${sessionId}`)
+              } else if (!this.runMap.has(sessionId)) {
+                this.runMap.set(sessionId, event.run_id)
+                console.log(`Stored initial run_id ${event.run_id} for session ${sessionId}`)
               }
+            }
 
-              try {
-                const event: AgentEvent = JSON.parse(eventData)
-                // Pass toolCalls by reference so it can be modified
-                const chunk = this.handleAgentEvent(event, messageId, toolCalls)
+            const agentId = event.agent_id || event.agentId || event.agent?.id
+            if (typeof agentId === 'string' && agentId.trim()) {
+              this.agentMap.set(sessionId, { type: 'agent', id: agentId })
+            }
 
-                if (chunk) {
-                   yield chunk
-                }
+            let handledTool = false
+            if (Array.isArray(event.tools)) {
+              const toolEventNames = new Set(['ToolCall', 'RunPaused', 'AgentRunPaused', 'AgentToolCall'])
 
-              } catch (parseError) {
-                 // The error from your screenshot is likely a server-side or client-side JSON parsing issue
-                 // unrelated to the streaming logic itself. This log can help debug it.
-                console.warn('Failed to parse SSE event JSON:', eventData, parseError)
+              if (!eventName || toolEventNames.has(eventName)) {
+                for (const tool of event.tools) {
+                  if (tool?.external_execution_required !== true) continue
 
-                // Check for common non-JSON data that might cause this
-                if (eventData.includes("SyntaxError")) {
-                    yield this.createErrorChunk("Received a SyntaxError from the server stream.");
+                  const toolCallId = tool.tool_call_id || tool.id
+                  if (!toolCallId) continue
+
+                  const dedupKey = `${sessionId}:${toolCallId}`
+                  if (this.processedToolCalls.has(dedupKey)) continue
+                  this.processedToolCalls.add(dedupKey)
+
+                  if (isFirstChunk) {
+                    yield this.createChunk(messageId, { role: 'assistant' }, null, modelId)
+                    isFirstChunk = false
+                  }
+
+                  yield this.createToolCallChunk(messageId, toolCallId, tool.tool_name, tool.tool_args || {}, modelId)
+
+                  this.enqueueToolMetadata(sessionId, {
+                    tool_call_id: toolCallId,
+                    tool_name: tool.tool_name,
+                    tool_args: tool.tool_args || {},
+                  })
+
+                  const toolTask = this.executeAndContinueTool(
+                    toolCallId,
+                    tool.tool_name,
+                    tool.tool_args || {},
+                    sessionId,
+                    dedupKey,
+                    abortController
+                  ).catch((err) => console.error('Tool execution failed:', err))
+
+                  pendingToolTasks.push(toolTask)
+                  handledTool = true
                 }
               }
             }
+
+            if (handledTool) continue
+
+            if (typeof event.content === 'string' && event.content.trim()) {
+              const delta: Record<string, unknown> = {}
+              if (isFirstChunk) {
+                delta.role = 'assistant'
+                isFirstChunk = false
+              }
+              delta.content = event.content
+              const metadataToolCalls = this.dequeueToolMetadata(sessionId)
+              if (metadataToolCalls.length) {
+                delta.metadata = {
+                  tool_calls: metadataToolCalls.map((tool) => ({
+                    tool,
+                    state: 'pending',
+                  })),
+                }
+              }
+              yield this.createChunk(messageId, delta, null, modelId)
+            }
+
+            if (event.event === 'TeamRunCompleted' || event.event === 'RunCompleted') {
+              const finalDelta: Record<string, unknown> = {}
+              if (typeof event.content === 'string' && event.content.trim()) {
+                finalDelta.content = event.content
+              }
+
+              bufferedChunks.push(...this.drainContinuationChunks(sessionId))
+              bufferedChunks.push(this.createChunk(messageId, finalDelta, 'stop', modelId))
+              completed = true
+              break
+            }
+          } catch (error) {
+            console.warn('Failed to parse SSE event:', eventData.substring(0, 100), error)
           }
         }
-      } finally {
-        reader.releaseLock()
+      }
+
+      if (!completed) {
+        bufferedChunks.push(...this.drainContinuationChunks(sessionId))
       }
     } catch (error) {
-      if (abortController?.signal.aborted) {
-        return
+      console.error('Streaming error:', error)
+      bufferedChunks.push(
+        this.createChunk(
+          ulid(),
+          { role: 'assistant', content: `Error: ${error instanceof Error ? error.message : 'Unknown error'}` },
+          'stop',
+          modelId
+        )
+      )
+    } finally {
+      if (pendingToolTasks.length) {
+        await Promise.allSettled(pendingToolTasks)
       }
+      if (reader) {
+        reader.releaseLock()
+      }
+      bufferedChunks.push(...this.drainContinuationChunks(sessionId))
+    }
 
-      console.error('Streaming request failed:', error)
-
-      // Yield error chunk
-      yield this.createErrorChunk(error instanceof Error ? error.message : 'Unknown error')
+    for (const chunk of bufferedChunks) {
+      yield chunk
     }
   }
 
-  /**
-   * Handle individual agent events and convert to OpenAI completion chunks
-   */
-  private handleAgentEvent(
-    event: AgentEvent,
-    messageId: string,
-    toolCalls: any[] // Modified in place
-  ): chatCompletionChunk | null {
 
-    switch (event.type) {
-      case EventType.TEXT_MESSAGE_START:
-        return this.createCompletionChunk(messageId, '', null, undefined, 'assistant')
-
-      case EventType.TEXT_MESSAGE_CONTENT:
-        return this.createCompletionChunk(messageId, event.delta, null)
-
-      case EventType.TOOL_CALL_START: {
-        const toolCall = {
-          index: toolCalls.length,
-          id: event.toolCallId,
-          type: 'function' as const,
-          function: {
-            name: event.toolCallName,
-            arguments: '',
-          },
-        }
-        toolCalls.push(toolCall)
-        // Send the tool call structure itself
-        return this.createCompletionChunk(messageId, '', null, [toolCall])
-      }
-
-      case EventType.TOOL_CALL_ARGS: {
-        if (toolCalls.length > 0) {
-          const lastToolCall = toolCalls[toolCalls.length - 1]
-          lastToolCall.function.arguments += event.delta
-
-          // Send the arguments delta
-          return this.createCompletionChunk(messageId, '', null, [{
-            index: toolCalls.length - 1,
-            function: {
-              arguments: event.delta,
-            },
-          }])
-        }
-        break
-      }
-      
-      // TOOL_CALL_END, TEXT_MESSAGE_END, and RUN_STARTED are transitional; no chunk needed.
-      case EventType.TOOL_CALL_END:
-      case EventType.TEXT_MESSAGE_END:
-      case EventType.RUN_STARTED:
-          return null
-
-      // =================================================================
-      // CORE LOGIC FIX IS HERE
-      // =================================================================
-      case EventType.RUN_FINISHED: {
-        // When the run finishes, decide the *real* finish reason.
-        // If we have started tool calls, the reason is 'tool_calls'.
-        // Otherwise, it's a normal 'stop'.
-        const finishReason = toolCalls.length > 0 ? 'tool_calls' : 'stop'
-        return this.createCompletionChunk(messageId, '', finishReason, undefined)
-      }
-      // =================================================================
-
-      case EventType.RUN_ERROR:
-        // Agent error
-        return this.createErrorChunk(event.message)
-
-      default:
-        // Handle other events as needed
-        return null
-    }
-    return null
-  }
-
-  /**
-   * Create non-streaming response
-   */
-  private async createNonStreamingResponse(
-    agentInput: RunAgentInput,
+  private async nonStreamResponse(
+    url: string,
+    formData: FormData,
+    modelId: string,
     abortController?: AbortController
   ): Promise<chatCompletion> {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: this.getHeaders(),
+      body: formData,
+      signal: abortController?.signal,
+    })
+  
+    if (!response.ok) {
+      const errorText = await response.text()
+      throw new Error(`Request failed: ${response.status} - ${errorText}`)
+    }
+  
+    const result = await response.json()
+  
+    return {
+      id: result.run_id || ulid(),
+      object: 'chat.completion',
+      created: Math.floor(Date.now() / 1000),
+      model: modelId,
+      choices: [
+        {
+          index: 0,
+          message: {
+            role: 'assistant',
+            content: result.content || null,
+          },
+          finish_reason: 'stop',
+        },
+      ],
+      usage: { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 },
+    }
+  }
+  
+  private async executeAndContinueTool(
+    toolCallId: string,
+    toolName: string,
+    toolArgs: Record<string, unknown>,
+    sessionId: string,
+    dedupKey: string,
+    abortController?: AbortController
+  ) {
     try {
-      const response = await fetch(`${this.baseUrl}`, {
+      const { promise } = getServiceHub().mcp().callToolWithCancellation({
+        toolName,
+        arguments: toolArgs,
+      })
+
+      const result = await promise
+      const output = this.normalizeToolResult(result as ToolCallResult)
+
+      await this.sendToolResult(sessionId, toolCallId, output, false, abortController)
+    } catch (error) {
+      console.error(`Tool ${toolName} execution failed:`, error)
+      const message = error instanceof Error ? error.message : String(error)
+      await this.sendToolResult(sessionId, toolCallId, message, true, abortController)
+    } finally {
+      this.processedToolCalls.delete(dedupKey)
+    }
+  }
+
+  private async sendToolResult(
+    sessionId: string,
+    toolCallId: string,
+    output: string,
+    isError: boolean,
+    abortController?: AbortController
+  ) {
+    const runId = this.runMap.get(sessionId)
+    let agentInfo = this.agentMap.get(sessionId)
+
+    if (!runId || !agentInfo || agentInfo.type !== 'agent') {
+      console.error('Missing run_id or agent info for continue request')
+      return
+    }
+
+    const url = new URL(this.baseUrl)
+    url.searchParams.set('agent_id', agentInfo.id)
+    url.searchParams.set('run_id', runId)
+    url.searchParams.set('continue', 'true')
+
+    const toolsPayload = [
+      {
+        tool_call_id: toolCallId,
+        output,
+        is_error: isError,
+      },
+    ]
+
+    const body = new URLSearchParams()
+    body.append('tools', JSON.stringify(toolsPayload))
+    body.append('session_id', sessionId)
+    body.append('stream', 'true')
+
+    console.log(`Sending tool result to continue endpoint: ${url.toString()}`)
+
+    const pendingToolTasks: Promise<void>[] = []
+
+    try {
+      const response = await fetch(url.toString(), {
         method: 'POST',
-        headers: this.getHeaders(),
-        body: JSON.stringify(agentInput),
+        headers: this.getHeaders('application/x-www-form-urlencoded'),
+        body,
         signal: abortController?.signal,
       })
 
       if (!response.ok) {
-        throw new Error(`Agent request failed: ${response.statusText}`)
+        const errorText = await response.text()
+        console.error(`Tool result submission failed: ${response.status} - ${errorText}`)
+        return
       }
 
-      const result = await response.json()
+      const reader = response.body?.getReader()
+      if (reader) {
+        const decoder = new TextDecoder()
+        let buffer = ''
+        const messageId = ulid()
+        let isFirstChunk = true
+        let currentAgentInfo = agentInfo
 
-      // Convert agent response to OpenAI format
-      return {
-        id: ulid(),
-        object: 'chat.completion',
-        created: Math.floor(Date.now() / 1000),
-        model: agentInput.forwardedProps.model || 'gamewave-agent',
-        choices: [{
-          index: 0,
-          message: {
-            role: 'assistant',
-            content: result.content || null, // content can be null if only tool calls are made
-            tool_calls: result.toolCalls || undefined,
-          },
-          finish_reason: result.toolCalls ? 'tool_calls' : 'stop',
-        }],
-        usage: {
-          prompt_tokens: 0, // Would need to calculate or get from agent
-          completion_tokens: 0, // Would need to calculate or get from agent
-          total_tokens: 0,
-        },
+        try {
+          processing: while (true) {
+            const { done, value } = await reader.read()
+            if (done) break
+
+            buffer += decoder.decode(value, { stream: true })
+            const lines = buffer.split('\n')
+            buffer = lines.pop() || ''
+
+            for (const line of lines) {
+              if (!line.startsWith('data: ')) continue
+
+              const data = line.slice(6).trim()
+              if (!data || data === '[DONE]') {
+                continue
+              }
+
+              try {
+                const event = JSON.parse(data)
+                console.log(`Continue response event: ${event.event || 'unknown'}`)
+                const eventName = typeof event.event === 'string' ? event.event : undefined
+
+                if (event.run_id) {
+                  const eventAgentId = event.agent_id || event.agentId || event.agent?.id
+                  const isAgentRun = typeof eventAgentId === 'string' && eventAgentId.trim().length > 0
+
+                  if (
+                    isAgentRun &&
+                    (eventName === 'RunStarted' || eventName === 'RunPaused' || eventName === 'RunContent')
+                  ) {
+                    this.runMap.set(sessionId, event.run_id)
+                  } else if (!this.runMap.has(sessionId)) {
+                    this.runMap.set(sessionId, event.run_id)
+                  }
+                }
+
+                const agentId = event.agent_id || event.agentId || event.agent?.id
+                if (typeof agentId === 'string' && agentId.trim()) {
+                  const updatedAgent: AgentMapping = { type: 'agent', id: agentId }
+                  this.agentMap.set(sessionId, updatedAgent)
+                  currentAgentInfo = updatedAgent
+                }
+
+                let handledTool = false
+
+                if (event.event === 'RunContinued') {
+                  continue
+                }
+
+                if (Array.isArray(event.tools)) {
+                  const toolEventNames = new Set(['ToolCall', 'RunPaused', 'AgentRunPaused', 'AgentToolCall'])
+
+                  if (!eventName || toolEventNames.has(eventName)) {
+                    for (const tool of event.tools) {
+                      if (tool?.external_execution_required !== true) continue
+
+                      const toolCallId = tool.tool_call_id || tool.id
+                      if (!toolCallId) continue
+
+                      const dedupKey = `${sessionId}:${toolCallId}`
+                      if (this.processedToolCalls.has(dedupKey)) continue
+                      this.processedToolCalls.add(dedupKey)
+
+                      const toolName = tool.tool_name || ''
+                      const toolArgs = tool.tool_args || {}
+
+                      this.enqueueToolMetadata(sessionId, {
+                        tool_call_id: toolCallId,
+                        tool_name: toolName,
+                        tool_args: toolArgs,
+                      })
+
+                      this.enqueueContinuationChunk(
+                        sessionId,
+                        this.createToolCallChunk(
+                          messageId,
+                          toolCallId,
+                          toolName,
+                          toolArgs,
+                          currentAgentInfo.id
+                        )
+                      )
+
+                      isFirstChunk = false
+
+                      const toolTask = this.executeAndContinueTool(
+                        toolCallId,
+                        toolName,
+                        toolArgs,
+                        sessionId,
+                        dedupKey,
+                        abortController
+                      ).catch((err) => console.error('Tool execution failed:', err))
+
+                      pendingToolTasks.push(toolTask)
+                      handledTool = true
+                    }
+                  } else {
+                    for (const tool of event.tools) {
+                      if (!tool?.tool_call_id) continue
+                      this.enqueueToolMetadata(sessionId, {
+                        tool_call_id: tool.tool_call_id,
+                        tool_name: tool.tool_name || '',
+                        tool_args: tool.tool_args || {},
+                      })
+                    }
+                  }
+                }
+
+                if (handledTool) {
+                  continue
+                }
+
+                if (typeof event.content === 'string' && event.content.trim()) {
+                  const delta: Record<string, unknown> = {}
+                  if (isFirstChunk) {
+                    delta.role = 'assistant'
+                    isFirstChunk = false
+                  }
+                  delta.content = event.content
+                  const metadataToolCalls = this.dequeueToolMetadata(sessionId)
+                  if (metadataToolCalls.length) {
+                    delta.metadata = {
+                      tool_calls: metadataToolCalls.map((tool) => ({
+                        tool,
+                        state: 'pending',
+                      })),
+                    }
+                  }
+
+                  this.enqueueContinuationChunk(
+                    sessionId,
+                    this.createChunk(
+                      messageId,
+                      delta,
+                      event.event === 'RunCompleted' ? 'stop' : null,
+                      agentInfo.id
+                    )
+                  )
+
+                  if (event.event === 'RunCompleted') {
+                    break processing
+                  }
+                }
+              } catch (error) {
+                // Ignore parse errors
+              }
+            }
+          }
+        } finally {
+          reader.releaseLock()
+        }
       }
     } catch (error) {
-      console.error('Non-streaming request failed:', error)
-      throw error
+      console.error('Failed to send tool result:', error)
+    } finally {
+      if (pendingToolTasks.length) {
+        await Promise.allSettled(pendingToolTasks)
+      }
     }
   }
 
-  /**
-   * Helper method to create completion chunks
-   */
-  private createCompletionChunk(
-    messageId: string,
-    content: string | null,
-    finishReason: 'stop' | 'length' | 'tool_calls' | 'content_filter' | null,
-    toolCalls?: any[],
-    role?: 'assistant'
-  ): chatCompletionChunk {
-    return {
-      id: messageId,
-      object: 'chat.completion.chunk',
-      created: Math.floor(Date.now() / 1000),
-      model: 'gamewave-agent',
-      choices: [{
-        index: 0,
-        delta: {
-          ...(role && { role }), // Only add role for the first chunk
-          ...(content && { content }), // Only add content if it's not empty
-          ...(toolCalls && { tool_calls: toolCalls }),
-        },
-        finish_reason: finishReason,
-      }],
-    }
-  }
+  private normalizeToolResult(result: ToolCallResult): string {
+    if (result == null) return ''
+    if (typeof result === 'string') return result
 
-  /**
-   * Helper method to create error chunks
-   */
-  private createErrorChunk(errorMessage: string): chatCompletionChunk {
-    // Return an error message in the content of the stream
-    return this.createCompletionChunk(
-        ulid(),
-        `An error occurred: ${errorMessage}`,
-        'stop',
-        undefined,
-        'assistant'
-    );
-  }
+    if (typeof result === 'object') {
+      const content = result.content
 
+      if (typeof content === 'string') {
+        return content
+      }
 
-  /**
-   * Convert OpenAI messages to agent format
-   */
-  private convertMessagesToAgentFormat(messages: any[]): Message[] {
-    return messages.map(msg => ({
-      id: ulid(),
-      role: msg.role,
-      content: msg.content || undefined,
-      name: msg.name,
-      toolCalls: msg.tool_calls?.map((tc: any) => ({
-        id: tc.id,
-        type: tc.type,
-        function: tc.function,
-      })),
-      toolCallId: msg.tool_call_id,
-    }))
-  }
+      if (Array.isArray(content)) {
+        return content
+          .map((item) => {
+            if (typeof item === 'string') return item
+            if (item && typeof item === 'object' && 'text' in item) {
+              return String((item as { text?: string }).text ?? '')
+            }
+            return JSON.stringify(item ?? '')
+          })
+          .filter(Boolean)
+          .join('\n')
+      }
 
-  /**
-   * Convert OpenAI tools to agent format
-   */
-  private convertToolsToAgentFormat(tools: any[]): Tool[] {
-    return tools.map(tool => ({
-      name: tool.function?.name || '',
-      description: tool.function?.description || '',
-      parameters: tool.function?.parameters || {},
-    }))
-  }
+      if (typeof result.error === 'string') {
+        return result.error
+      }
 
-  /**
-   * Get request headers
-   */
-  private getHeaders(): Record<string, string> {
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
+      return JSON.stringify(result)
     }
 
-    if (this.apiKey) {
-      headers['Authorization'] = `Bearer ${this.apiKey}`
+    return String(result)
+  }
+
+  private getHeaders(contentType?: string): Record<string, string> {
+    const headers: Record<string, string> = {}
+
+    if (contentType) {
+      headers['Content-Type'] = contentType
+    }
+
+    const apiKey = this.resolveApiKey()
+    if (apiKey) {
+      headers['Authorization'] = `Bearer ${apiKey}`
+      headers['x-api-key'] = apiKey
     }
 
     return headers
   }
 
-  // Required abstract methods with basic implementations
+  private resolveApiKey(): string | undefined {
+    if (this.apiKey?.trim()) {
+      return this.apiKey
+    }
+
+    if (typeof window !== 'undefined') {
+      const providerState = useModelProvider.getState()
+      const provider = providerState.getProviderByName?.('gamewave-agent')
+      const storedKey = provider?.api_key
+      if (storedKey && typeof storedKey === 'string' && storedKey.trim()) {
+        return storedKey
+      }
+    }
+
+    return undefined
+  }
+
+  private getLastUserMessage(opts: chatCompletionRequest): string | undefined {
+    for (let i = opts.messages.length - 1; i >= 0; i -= 1) {
+      const message = opts.messages[i]
+      if (message.role !== 'user') continue
+
+      if (typeof message.content === 'string') {
+        if (message.content.trim()) return message.content
+        continue
+      }
+
+      if (Array.isArray(message.content)) {
+        const aggregated = message.content
+          .map((part) => {
+            if (typeof part === 'string') return part
+            if (part && typeof part === 'object' && 'text' in part) {
+              return String((part as { text?: string }).text ?? '')
+            }
+            return ''
+          })
+          .filter(Boolean)
+          .join('\n')
+
+        if (aggregated.trim()) {
+          return aggregated
+        }
+      }
+    }
+    return undefined
+  }
+
+  private createToolCallChunk(
+    messageId: string,
+    toolCallId: string,
+    toolName: string,
+    toolArgs: Record<string, unknown>,
+    modelId: string
+  ): chatCompletionChunk {
+    const toolCall: ChatCompletionMessageToolCall = {
+      id: toolCallId,
+      type: 'function',
+      function: {
+        name: toolName,
+        arguments: JSON.stringify(toolArgs),
+      },
+    }
+
+    return this.createChunk(
+      messageId,
+      {
+        role: 'assistant',
+        tool_calls: [toolCall],
+      },
+      'tool_calls',
+      modelId
+    )
+  }
+
+  private createChunk(
+    id: string,
+    delta: Record<string, unknown>,
+    finish_reason: 'stop' | 'length' | 'tool_calls' | 'content_filter' | 'function_call' | null,
+    model: string
+  ): chatCompletionChunk {
+    return {
+      id,
+      object: 'chat.completion.chunk',
+      created: Math.floor(Date.now() / 1000),
+      model,
+      choices: [
+        {
+          index: 0,
+          delta,
+          finish_reason,
+        },
+      ],
+    }
+  }
+
   async delete(modelId: string): Promise<void> {
-    console.log(`Delete model ${modelId} - not implemented`)
+    console.log(`Delete ${modelId} - not implemented`)
   }
 
   async import(modelId: string, _opts: any): Promise<void> {
-    console.log(`Import model ${modelId} - not implemented`)
+    console.log(`Import ${modelId} - not implemented`)
   }
 
   async abortImport(modelId: string): Promise<void> {

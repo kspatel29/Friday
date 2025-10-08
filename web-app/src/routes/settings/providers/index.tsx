@@ -7,15 +7,15 @@ import { Card, CardItem } from '@/containers/Card'
 import { useTranslation } from '@/i18n/react-i18next-compat'
 import { useModelProvider } from '@/hooks/useModelProvider'
 import { useNavigate } from '@tanstack/react-router'
-import { IconCirclePlus, IconSettings } from '@tabler/icons-react'
+import { IconSettings } from '@tabler/icons-react'
 import { getProviderTitle } from '@/lib/utils'
 import ProvidersAvatar from '@/containers/ProvidersAvatar'
 // import { AddProviderDialog } from '@/containers/dialogs'
 import { Switch } from '@/components/ui/switch'
-import { useCallback } from 'react'
-import { openAIProviderSettings } from '@/consts/providers'
-import cloneDeep from 'lodash/cloneDeep'
-import { toast } from 'sonner'
+// import { useCallback } from 'react'
+// import { openAIProviderSettings } from '@/consts/providers'
+// import cloneDeep from 'lodash/cloneDeep'
+// import { toast } from 'sonner'
 import { useServiceHub } from '@/hooks/useServiceHub'
 import { PlatformFeatures } from '@/lib/platform/const'
 import { PlatformFeature } from '@/lib/platform/types'
@@ -28,37 +28,38 @@ export const Route = createFileRoute(route.settings.model_providers as any)({
 function ModelProviders() {
   const { t } = useTranslation()
   const serviceHub = useServiceHub()
-  const { providers, addProvider, updateProvider } = useModelProvider()
+  const { providers, updateProvider } = useModelProvider()
+  // const { providers, addProvider, updateProvider } = useModelProvider()
   const navigate = useNavigate()
 
-  const createProvider = useCallback(
-    (name: string) => {
-      if (
-        providers.some((e) => e.provider.toLowerCase() === name.toLowerCase())
-      ) {
-        toast.error(t('providerAlreadyExists', { name }))
-        return
-      }
-      const newProvider = {
-        provider: name,
-        active: true,
-        models: [],
-        settings: cloneDeep(openAIProviderSettings) as ProviderSetting[],
-        api_key: '',
-        base_url: 'https://api.openai.com/v1',
-      }
-      addProvider(newProvider)
-      setTimeout(() => {
-        navigate({
-          to: route.settings.providers,
-          params: {
-            providerName: name,
-          },
-        })
-      }, 0)
-    },
-    [providers, addProvider, t, navigate]
-  )
+  // const _createProvider = useCallback(
+  //   (name: string) => {
+  //     if (
+  //       providers.some((e) => e.provider.toLowerCase() === name.toLowerCase())
+  //     ) {
+  //       toast.error(t('providerAlreadyExists', { name }))
+  //       return
+  //     }
+  //     const newProvider = {
+  //       provider: name,
+  //       active: true,
+  //       models: [],
+  //       settings: cloneDeep(openAIProviderSettings) as ProviderSetting[],
+  //       api_key: '',
+  //       base_url: 'https://api.openai.com/v1',
+  //     }
+  //     addProvider(newProvider)
+  //     setTimeout(() => {
+  //       navigate({
+  //         to: route.settings.providers,
+  //         params: {
+  //           providerName: name,
+  //         },
+  //       })
+  //     }, 0)
+  //   },
+  //   [providers, addProvider, t, navigate]
+  // )
 
   // Check if model provider settings are enabled for this platform
   if (!PlatformFeatures[PlatformFeature.MODEL_PROVIDER_SETTINGS]) {

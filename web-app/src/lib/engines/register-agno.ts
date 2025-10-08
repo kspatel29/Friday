@@ -5,36 +5,47 @@ import { useModelProvider } from '@/hooks/useModelProvider'
 /**
  * Register the Agno Agent Engine with the application
  */
-export function registerAgnoAgent(baseUrl: string = 'https://mowbjvvzgrerertijhql.supabase.co/functions/v1/friday-agent-proxy', apiKey?: string) {
+export function registerAgnoAgent(
+  baseUrl: string = 'https://mowbjvvzgrerertijhql.supabase.co/functions/v1/friday-agent-proxy',
+  apiKey?: string
+) {
   try {
     console.log('AgnoAgentEngine constructed with baseUrl:', baseUrl)
-    const agnoEngine = new AgnoAgentEngine(baseUrl, apiKey)
-    
+
     // Wait for window.core to be available
-    const registerEngine = () => {
+    const registerEngine = (): AgnoAgentEngine | null => {
       if (typeof window !== 'undefined' && window.core?.extensionManager) {
         const extensionManager = ExtensionManager.getInstance()
-        
+
+        const existingEngine = extensionManager.getEngine<AgnoAgentEngine>('gamewave-agent')
+        if (existingEngine instanceof AgnoAgentEngine) {
+          existingEngine.updateConfig(baseUrl, apiKey)
+          console.log('Agno Agent Engine config refreshed')
+          useModelProvider.getState().setEngineRegistered('gamewave-agent', true)
+          return existingEngine
+        }
+
+        const agnoEngine = new AgnoAgentEngine(baseUrl, apiKey)
+
         // Register the engine using the standard register method
         // This will automatically register it in the engines map since AgnoAgentEngine has a provider property
         extensionManager.register('gamewave-agent', agnoEngine)
-        
+
         console.log('Agno Agent Engine registered successfully')
-        
+
         useModelProvider.getState().setEngineRegistered('gamewave-agent', true)
 
-        // Test that the engine can be retrieved
         const retrievedEngine = extensionManager.getEngine('gamewave-agent')
         console.log('Retrieved engine:', retrievedEngine ? 'Found' : 'Not found')
-        
+
         return agnoEngine
-      } else {
-        // Retry after a short delay
-        setTimeout(registerEngine, 100)
-        return null
       }
+
+      // Retry after a short delay
+      setTimeout(registerEngine, 100)
+      return null
     }
-    
+
     return registerEngine()
   } catch (error) {
     console.error('Failed to register Agno Agent Engine:', error)

@@ -36,7 +36,7 @@ import {
 import { toast } from 'sonner'
 import { useCallback, useEffect, useState } from 'react'
 import { predefinedProviders } from '@/consts/providers'
-import { useModelLoad } from '@/hooks/useModelLoad'
+// import { useModelLoad } from '@/hooks/useModelLoad'
 import { useLlamacppDevices } from '@/hooks/useLlamacppDevices'
 import { PlatformFeatures } from '@/lib/platform/const'
 import { PlatformFeature } from '@/lib/platform/types'
@@ -57,7 +57,7 @@ export const Route = createFileRoute('/settings/providers/$providerName')({
 function ProviderDetail() {
   const { t } = useTranslation()
   const serviceHub = useServiceHub()
-  const { setModelLoadError } = useModelLoad()
+  // const { setModelLoadError } = useModelLoad()
   const steps = [
     {
       target: '.first-step-setup-remote-provider',
@@ -79,8 +79,8 @@ function ProviderDetail() {
     },
   ]
   const { step } = useSearch({ from: Route.id })
-  const [activeModels, setActiveModels] = useState<string[]>([])
-  const [loadingModels, setLoadingModels] = useState<string[]>([])
+  const [_activeModels, setActiveModels] = useState<string[]>([])
+  // const [_loadingModels, setLoadingModels] = useState<string[]>([])
   const [refreshingModels, setRefreshingModels] = useState(false)
   const [isCheckingBackendUpdate, setIsCheckingBackendUpdate] = useState(false)
   const [isInstallingBackend, setIsInstallingBackend] = useState(false)
@@ -284,54 +284,54 @@ function ProviderDetail() {
     }
   }
 
-  const handleStartModel = async (modelId: string) => {
-    // Add model to loading state
-    setLoadingModels((prev) => [...prev, modelId])
-    if (provider) {
-      try {
-        // Start the model with plan result
-        await serviceHub.models().startModel(provider, modelId)
+  // const _handleStartModel = async (modelId: string) => {
+  //   // Add model to loading state
+  //   setLoadingModels((prev) => [...prev, modelId])
+  //   if (provider) {
+  //     try {
+  //       // Start the model with plan result
+  //       await serviceHub.models().startModel(provider, modelId)
 
-        // Refresh active models after starting
-        serviceHub
-          .models()
-          .getActiveModels()
-          .then((models) => setActiveModels(models || []))
-      } catch (error) {
-        console.error('Error starting model:', error)
-        if (
-          error &&
-          typeof error === 'object' &&
-          'message' in error &&
-          typeof error.message === 'string'
-        ) {
-          setModelLoadError({ message: error.message })
-        } else {
-          setModelLoadError(typeof error === 'string' ? error : `${error}`)
-        }
-      } finally {
-        // Remove model from loading state
-        setLoadingModels((prev) => prev.filter((id) => id !== modelId))
-      }
-    }
-  }
+  //       // Refresh active models after starting
+  //       serviceHub
+  //         .models()
+  //         .getActiveModels()
+  //         .then((models) => setActiveModels(models || []))
+  //     } catch (error) {
+  //       console.error('Error starting model:', error)
+  //       if (
+  //         error &&
+  //         typeof error === 'object' &&
+  //         'message' in error &&
+  //         typeof error.message === 'string'
+  //       ) {
+  //         setModelLoadError({ message: error.message })
+  //       } else {
+  //         setModelLoadError(typeof error === 'string' ? error : `${error}`)
+  //       }
+  //     } finally {
+  //       // Remove model from loading state
+  //       setLoadingModels((prev) => prev.filter((id) => id !== modelId))
+  //     }
+  //   }
+  // }
 
-  const handleStopModel = (modelId: string) => {
-    // Original: stopModel(modelId).then(() => { setActiveModels((prevModels) => prevModels.filter((model) => model !== modelId)) })
-    serviceHub
-      .models()
-      .stopModel(modelId)
-      .then(() => {
-        // Refresh active models after stopping
-        serviceHub
-          .models()
-          .getActiveModels()
-          .then((models) => setActiveModels(models || []))
-      })
-      .catch((error) => {
-        console.error('Error stopping model:', error)
-      })
-  }
+  // const _handleStopModel = (modelId: string) => {
+  //   // Original: stopModel(modelId).then(() => { setActiveModels((prevModels) => prevModels.filter((model) => model !== modelId)) })
+  //   serviceHub
+  //     .models()
+  //     .stopModel(modelId)
+  //     .then(() => {
+  //       // Refresh active models after stopping
+  //       serviceHub
+  //         .models()
+  //         .getActiveModels()
+  //         .then((models) => setActiveModels(models || []))
+  //     })
+  //     .catch((error) => {
+  //       console.error('Error stopping model:', error)
+  //     })
+  // }
 
   const handleCheckForBackendUpdate = useCallback(async () => {
     if (provider?.provider !== 'llamacpp') return

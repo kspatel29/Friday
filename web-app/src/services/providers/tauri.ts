@@ -21,7 +21,7 @@ export class TauriProvidersService extends DefaultProvidersService {
     try {
       const builtinProviders = predefinedProviders.map((provider) => {
         let models = provider.models as Model[]
-        if (Object.keys(providerModels).includes(provider.provider)) {
+        if (provider.provider && Object.keys(providerModels).includes(provider.provider)) {
           const builtInModels = providerModels[
             provider.provider as unknown as keyof typeof providerModels
           ].models as unknown as string[]

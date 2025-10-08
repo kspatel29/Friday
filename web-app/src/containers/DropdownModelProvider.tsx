@@ -291,8 +291,9 @@ const DropdownModelProvider = ({
         // Skip models that require API key but don't have one (except llamacpp)
         if (
           provider &&
+          provider.provider &&
           predefinedProviders.some((e) =>
-            e.provider.includes(provider.provider)
+            e.provider?.includes(provider.provider!)
           ) &&
           provider.provider !== 'llamacpp' &&
           !provider.api_key?.length

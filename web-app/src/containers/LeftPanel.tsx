@@ -11,7 +11,6 @@ import {
   // IconAppsFilled,
   IconX,
   IconSearch,
-  IconClipboardSmileFilled,
 } from '@tabler/icons-react'
 import { route } from '@/constants/routes'
 import ThreadList from './ThreadList'

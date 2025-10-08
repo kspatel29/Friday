@@ -2,6 +2,7 @@ import { useAppState } from '@/hooks/useAppState'
 import { ThreadContent } from './ThreadContent'
 import { memo, useMemo } from 'react'
 import { useMessages } from '@/hooks/useMessages'
+import { ToolCall } from '@/types/message'
 
 type Props = {
   threadId: string
@@ -33,9 +34,12 @@ export const StreamingContent = memo(({ threadId }: Props) => {
   }, [streamingContent])
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const streamingTools: any = useMemo(() => {
+  const streamingTools: ToolCall[] = useMemo(() => {
     const calls = streamingContent?.metadata?.tool_calls
-    return calls
+    if (!Array.isArray(calls)) return []
+    return calls.filter(
+      (call) => call?.tool?.external_execution_required === true
+    )
   }, [streamingContent])
 
   const lastAssistant = useMemo(() => {
@@ -58,14 +62,7 @@ export const StreamingContent = memo(({ threadId }: Props) => {
   // The streaming content is always the last message
   return (
     <ThreadContent
-      streamTools={{
-        tool_calls: {
-          function: {
-            name: streamingTools?.[0]?.function?.name as string,
-            arguments: streamingTools?.[0]?.function?.arguments as string,
-          },
-        },
-      }}
+      streamTools={streamingTools}
       {...streamingContent}
       isLastMessage={true}
       showAssistant={

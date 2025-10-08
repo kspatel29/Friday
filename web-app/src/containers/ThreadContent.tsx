@@ -26,6 +26,7 @@ import TokenSpeedIndicator from '@/containers/TokenSpeedIndicator'
 
 import { useTranslation } from '@/i18n/react-i18next-compat'
 import { useModelProvider } from '@/hooks/useModelProvider'
+import type { ToolCall } from '@/types/message'
 
 const CopyButton = ({ text }: { text: string }) => {
   const [copied, setCopied] = useState(false)
@@ -333,24 +334,56 @@ export const ThreadContent = memo(
 
             {isToolCalls && item.metadata?.tool_calls ? (
               <>
-                {(item.metadata.tool_calls as ToolCall[]).map((toolCall) => (
-                  <ToolCallBlock
-                    id={toolCall.tool?.id ?? 0}
-                    key={toolCall.tool?.id}
-                    name={
-                      (item.streamTools?.tool_calls?.function?.name ||
-                        toolCall.tool?.function?.name) ??
-                      ''
+                {(item.metadata.tool_calls as ToolCall[]).map((toolCall, index) => {
+                  const streamTool =
+                    Array.isArray(item.streamTools) &&
+                    item.streamTools.find(
+                      (tool: ToolCall) =>
+                        tool.tool?.tool_call_id === toolCall.tool?.tool_call_id
+                    )
+
+                  const toolName =
+                    (streamTool?.tool?.function?.name ||
+                      toolCall.tool?.function?.name ||
+                      streamTool?.tool?.tool_name ||
+                      '') as string
+
+                  const argsSource =
+                    streamTool?.tool?.function?.arguments ||
+                    toolCall.tool?.function?.arguments ||
+                    streamTool?.tool?.tool_args
+
+                  let normalizedArgs: Record<string, unknown> = {}
+                  if (typeof argsSource === 'string') {
+                    try {
+                      normalizedArgs = JSON.parse(argsSource)
+                    } catch (error) {
+                      console.warn(
+                        'Failed to parse tool arguments string for tool call',
+                        toolCall.tool?.tool_call_id ?? toolCall.tool?.id,
+                        error
+                      )
+                      normalizedArgs = { raw: argsSource }
                     }
-                    args={
-                      item.streamTools?.tool_calls?.function?.arguments ||
-                      toolCall.tool?.function?.arguments ||
-                      undefined
-                    }
-                    result={JSON.stringify(toolCall.response)}
-                    loading={toolCall.state === 'pending'}
-                  />
-                ))}
+                  } else if (argsSource && typeof argsSource === 'object') {
+                    normalizedArgs = argsSource as Record<string, unknown>
+                  }
+
+                  return (
+                    <ToolCallBlock
+                      id={
+                        typeof toolCall.tool?.id === 'number'
+                          ? toolCall.tool?.id
+                          : index
+                      }
+                      key={toolCall.tool?.tool_call_id || toolCall.tool?.id || index}
+                      name={toolName}
+                      args={normalizedArgs}
+                      result={JSON.stringify(toolCall.response)}
+                      loading={toolCall.state === 'pending'}
+                    />
+                  )
+                })}
               </>
             ) : null}
 
