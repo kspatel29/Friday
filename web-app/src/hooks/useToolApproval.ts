@@ -32,7 +32,7 @@ export const useToolApproval = create<ToolApprovalState>()(
   persist(
     (set, get) => ({
       approvedTools: {},
-      allowAllMCPPermissions: false,
+      allowAllMCPPermissions: true,
       isModalOpen: false,
       modalProps: null,
 

@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
 import { localStorageKey } from '@/constants/localStorage'
-import { sep } from '@tauri-apps/api/path'
+import { getServiceHub } from '@/hooks/useServiceHub'
 import { modelSettings } from '@/lib/predefined'
 
 type ModelProviderState = {
@@ -9,6 +9,7 @@ type ModelProviderState = {
   selectedProvider: string
   selectedModel: Model | null
   deletedModels: string[]
+  registeredEngines: Record<string, boolean> 
   getModelBy: (modelId: string) => Model | undefined
   setProviders: (providers: ModelProvider[]) => void
   getProviderByName: (providerName: string) => ModelProvider | undefined
@@ -20,15 +21,26 @@ type ModelProviderState = {
   addProvider: (provider: ModelProvider) => void
   deleteProvider: (providerName: string) => void
   deleteModel: (modelId: string) => void
+  setEngineRegistered: (engineName: string, isRegistered: boolean) => void
 }
 
 export const useModelProvider = create<ModelProviderState>()(
   persist(
     (set, get) => ({
       providers: [],
-      selectedProvider: 'llamacpp',
+      // selectedProvider: 'llamacpp',
+      selectedProvider: 'gamewave-agent',
       selectedModel: null,
       deletedModels: [],
+      registeredEngines: {},
+      setEngineRegistered: (engineName, isRegistered) => { // *** 4. ADD ACTION IMPLEMENTATION ***
+        set((state) => ({
+          registeredEngines: {
+            ...state.registeredEngines,
+            [engineName]: isRegistered,
+          },
+        }))
+      },
       getModelBy: (modelId: string) => {
         const provider = get().providers.find(
           (provider) => provider.provider === get().selectedProvider
@@ -93,7 +105,11 @@ export const useModelProvider = create<ModelProviderState>()(
                   ? legacyModels
                   : models
                 ).find(
-                  (m) => m.id.split(':').slice(0, 2).join(sep()) === model.id
+                  (m) =>
+                    m.id
+                      .split(':')
+                      .slice(0, 2)
+                      .join(getServiceHub().path().sep()) === model.id
                 )?.settings || model.settings
               const existingModel = models.find((m) => m.id === model.id)
               return {
@@ -211,6 +227,10 @@ export const useModelProvider = create<ModelProviderState>()(
     {
       name: localStorageKey.modelProvider,
       storage: createJSONStorage(() => localStorage),
+      partialize: (state) =>
+        Object.fromEntries(
+          Object.entries(state).filter(([key]) => !['registeredEngines'].includes(key))
+        ),
       migrate: (persistedState: unknown, version: number) => {
         const state = persistedState as ModelProviderState & {
           providers: Array<
@@ -227,7 +247,7 @@ export const useModelProvider = create<ModelProviderState>()(
           >
         }
 
-        if (version === 0 && state?.providers) {
+        if (version <= 1 && state?.providers) {
           state.providers.forEach((provider) => {
             // Update cont_batching description for llamacpp provider
             if (provider.provider === 'llamacpp' && provider.settings) {
@@ -270,6 +290,15 @@ export const useModelProvider = create<ModelProviderState>()(
                     },
                   }
                 }
+
+                if (!model.settings.no_kv_offload) {
+                  model.settings.no_kv_offload = {
+                    ...modelSettings.no_kv_offload,
+                    controller_props: {
+                      ...modelSettings.no_kv_offload.controller_props,
+                    },
+                  }
+                }
               })
             }
           })
@@ -277,7 +306,7 @@ export const useModelProvider = create<ModelProviderState>()(
 
         return state
       },
-      version: 1,
+      version: 2,
     }
   )
 )

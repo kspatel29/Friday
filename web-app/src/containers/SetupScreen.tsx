@@ -1,5 +1,5 @@
 import { Card } from './Card'
-import { useModelProvider } from '@/hooks/useModelProvider'
+// import { useModelProvider } from '@/hooks/useModelProvider'
 import { Link } from '@tanstack/react-router'
 import { route } from '@/constants/routes'
 import HeaderPage from './HeaderPage'
@@ -9,9 +9,10 @@ import { localStorageKey } from '@/constants/localStorage'
 
 function SetupScreen() {
   const { t } = useTranslation()
-  const { providers } = useModelProvider()
-  const firstItemRemoteProvider =
-    providers.length > 0 ? providers[1].provider : 'openai'
+  // const { providers } = useModelProvider()
+  // const firstItemRemoteProvider =
+  //   providers.length > 0 ? providers[1]?.provider : 'openai'
+  const firstItemRemoteProvider = 'gamewave-agent'
 
   // Check if setup tour has been completed
   const isSetupCompleted =

@@ -1,18 +1,15 @@
 import { ChevronDown, ChevronUp, Loader } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { create } from 'zustand'
-import { RenderMarkdown } from './RenderMarkdown'
+import { RenderMarkdown } from '@/containers/RenderMarkdown'
 import { useMemo, useState } from 'react'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
 import { twMerge } from 'tailwind-merge'
 import { useTranslation } from '@/i18n/react-i18next-compat'
+
 import { SketchViewer } from '@/components/ui/sketch-viewer'
 import { SketchData } from '@/utils/sketchRenderer'
+
+import ImageModal from '@/containers/dialogs/ImageModal'
 
 interface Props {
   result: string
@@ -136,14 +133,6 @@ const ContentItemRenderer = ({
     )
   }
 
-  // if (item.type === 'text' && item.text) {
-  //   return (
-  //     <div key={index} className="mt-3">
-  //       <RenderMarkdown content={item.text} />
-  //     </div>
-  //   )
-  // }
-
   // For any other types, render as JSON
   return (
     <div key={index} className="mt-3">
@@ -180,7 +169,13 @@ const ToolCallBlock = ({ id, name, result, loading, args }: Props) => {
   const isSketchTool = name === 'sketch_agent_tool'
 
   // Parse the response based on tool type
-  const { parsedResult, contentItems, hasStructuredContent, sketchData, isSketch } = useMemo(() => {
+  const {
+    parsedResult,
+    contentItems,
+    hasStructuredContent,
+    sketchData,
+    isSketch,
+  } = useMemo(() => {
     if (isSketchTool) {
       const sketchResult = parseSketchResponse(result)
       return {
@@ -264,8 +259,8 @@ const ToolCallBlock = ({ id, name, result, loading, args }: Props) => {
                 {isSketchTool && isSketch && sketchData ? (
                   /* Render sketch for sketch_agent_tool */
                   <div className="my-3">
-                    <SketchViewer 
-                      sketchData={sketchData} 
+                    <SketchViewer
+                      sketchData={sketchData}
                       title="Generated Sketch"
                       className="max-w-lg"
                     />
@@ -294,34 +289,11 @@ const ToolCallBlock = ({ id, name, result, loading, args }: Props) => {
                 )}
               </>
             )}
-
           </div>
         </div>
       </div>
 
-      {/* Image Modal */}
-      <Dialog
-        open={!!modalImage}
-        onOpenChange={(open) => !open && closeModal()}
-      >
-        <DialogContent className="max-w-4xl max-h-[90vh] p-0">
-          <DialogHeader className="p-6 pb-2">
-            <DialogTitle>{modalImage?.alt || t('common:image')}</DialogTitle>
-          </DialogHeader>
-          <div className="flex justify-center items-center p-6 pt-2">
-            {modalImage && (
-              <img
-                src={modalImage.url}
-                alt={modalImage.alt}
-                className="max-w-full max-h-[70vh] object-contain rounded-md"
-                onError={(e) => {
-                  e.currentTarget.style.display = 'none'
-                }}
-              />
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
+      <ImageModal image={modalImage} onClose={closeModal} />
     </div>
   )
 }

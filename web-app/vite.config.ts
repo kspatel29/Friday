@@ -30,8 +30,17 @@ export default defineConfig(({ mode }) => {
         '@': path.resolve(__dirname, './src'),
       },
     },
+    optimizeDeps: {
+      exclude: ['@jan/extensions-web'],
+    },
+    build: {
+      rollupOptions: {
+        external: ['@jan/extensions-web'],
+      },
+    },
     define: {
       IS_TAURI: JSON.stringify(process.env.IS_TAURI),
+      IS_WEB_APP: JSON.stringify(false),
       IS_MACOS: JSON.stringify(
         process.env.TAURI_ENV_PLATFORM?.includes('darwin') ?? false
       ),

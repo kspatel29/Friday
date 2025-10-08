@@ -28,12 +28,30 @@ endif
 	yarn install
 	yarn build:tauri:plugin:api
 	yarn build:core
-	yarn build:extensions
+	yarn build:extensions && yarn build:extensions-web
 
 dev: install-and-build
 	yarn download:bin
 	yarn download:lib
 	yarn dev
+
+# Web application targets
+install-web-app: config-yarn
+	yarn install
+
+dev-web-app: install-web-app
+	yarn build:core
+	yarn dev:web-app
+
+build-web-app: install-web-app
+	yarn build:core
+	yarn build:web-app
+
+serve-web-app: 
+	yarn serve:web-app
+
+build-serve-web-app: build-web-app
+	yarn serve:web-app
 
 # Linting
 lint: install-and-build
@@ -49,6 +67,7 @@ test: lint
 	cargo test --manifest-path src-tauri/Cargo.toml --no-default-features --features test-tauri -- --test-threads=1
 	cargo test --manifest-path src-tauri/plugins/tauri-plugin-hardware/Cargo.toml
 	cargo test --manifest-path src-tauri/plugins/tauri-plugin-llamacpp/Cargo.toml
+	cargo test --manifest-path src-tauri/utils/Cargo.toml
 
 # Builds and publishes the app
 build-and-publish: install-and-build
