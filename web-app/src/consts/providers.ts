@@ -342,17 +342,19 @@ export const predefinedProviders = [
     ],
   },
   {
+    id: 'gamewave-agent',
+    name: 'GameWave Agent',
     active: true,
     api_key: '',
     base_url: 'https://mowbjvvzgrerertijhql.supabase.co/functions/v1/friday-agent-proxy',
-    // provider: 'gamewave-agent',
+    provider: 'gamewave-agent',
     settings: [
       {
         key: 'api-key',
         title: 'API Key',
         description: 'Your Gamewave agent API key',
         controller_type: 'input',
-        controller_props: { 
+        controller_props: {
           placeholder: 'Enter your API key...',
           value: '',
           type: 'password',
@@ -361,25 +363,21 @@ export const predefinedProviders = [
       },
     ],
     models: [
-      {
-        id: 'Agent',
-        name: 'GameWave Agent',
-        description: 'Can perform actions in your unreal engine',
-        capabilities: ['completion', 'tools'],
+       {
+        id: 'ask',
+        name: 'ask',
         version: '1.0',
-        providerId: 'gamewave-agent',
-        port: 0,
-        sizeBytes: 0,
+        description:
+          'It doesn\'t perform edits in your unreal environment',
+        capabilities: ['completion', 'tools'],
       },
-      {
-        id: 'Ask',
-        name: 'GameWave Agent',
-        description: 'Cannot perform actions in your unreal engine',
-        capabilities: ['completion', 'tools'],
+       {
+        id: 'agent',
+        name: 'agent',
         version: '1.0',
-        providerId: 'gamewave-agent',
-        port: 0,
-        sizeBytes: 0,
+        description:
+          'It can perform actions and edits in your unreal environment',
+        capabilities: ['completion', 'tools'],
       },
     ],
   }

@@ -36,12 +36,12 @@ import {
 import { toast } from 'sonner'
 import { useCallback, useEffect, useState } from 'react'
 import { predefinedProviders } from '@/consts/providers'
-import { useModelLoad } from '@/hooks/useModelLoad'
+// import { useModelLoad } from '@/hooks/useModelLoad'
 import { useLlamacppDevices } from '@/hooks/useLlamacppDevices'
 import { PlatformFeatures } from '@/lib/platform/const'
 import { PlatformFeature } from '@/lib/platform/types'
 import { useBackendUpdater } from '@/hooks/useBackendUpdater'
-import { registerAgnoAgent } from '@/lib/engines/register-agno'
+// 
 
 // as route.threadsDetail
 export const Route = createFileRoute('/settings/providers/$providerName')({
@@ -57,7 +57,7 @@ export const Route = createFileRoute('/settings/providers/$providerName')({
 function ProviderDetail() {
   const { t } = useTranslation()
   const serviceHub = useServiceHub()
-  const { setModelLoadError } = useModelLoad()
+  // const { setModelLoadError } = useModelLoad()
   const steps = [
     {
       target: '.first-step-setup-remote-provider',
@@ -79,8 +79,8 @@ function ProviderDetail() {
     },
   ]
   const { step } = useSearch({ from: Route.id })
-  const [activeModels, setActiveModels] = useState<string[]>([])
-  const [loadingModels, setLoadingModels] = useState<string[]>([])
+  const [, setActiveModels] = useState<string[]>([])
+  // const [, setLoadingModels] = useState<string[]>([])
   const [refreshingModels, setRefreshingModels] = useState(false)
   const [isCheckingBackendUpdate, setIsCheckingBackendUpdate] = useState(false)
   const [isInstallingBackend, setIsInstallingBackend] = useState(false)
@@ -198,17 +198,7 @@ function ProviderDetail() {
     }
   }, [provider, needsBackendConfig, refreshSettings])
 
-  // Register AgnoAgentEngine if API key is present for gamewave-agent, sync settings first
-  useEffect(() => {
-    if (provider?.provider === 'gamewave-agent' && provider.api_key && provider.settings) {
-      serviceHub.providers().updateSettings(providerName, provider.settings).then(() => {
-        registerAgnoAgent(provider.base_url, provider.api_key)
-      }).catch((error) => {
-        console.error('Failed to sync provider settings:', error)
-        registerAgnoAgent(provider.base_url, provider.api_key)
-      })
-    }
-  }, [provider, serviceHub, providerName])
+
 
   // Note: settingsChanged event is now handled globally in GlobalEventHandler
   // This ensures all screens receive the event intermediately
@@ -284,54 +274,54 @@ function ProviderDetail() {
     }
   }
 
-  const handleStartModel = async (modelId: string) => {
-    // Add model to loading state
-    setLoadingModels((prev) => [...prev, modelId])
-    if (provider) {
-      try {
-        // Start the model with plan result
-        await serviceHub.models().startModel(provider, modelId)
+  // const handleStartModel = async (modelId: string) => {
+  //   // Add model to loading state
+  //   setLoadingModels((prev) => [...prev, modelId])
+  //   if (provider) {
+  //     try {
+  //       // Start the model with plan result
+  //       await serviceHub.models().startModel(provider, modelId)
 
-        // Refresh active models after starting
-        serviceHub
-          .models()
-          .getActiveModels()
-          .then((models) => setActiveModels(models || []))
-      } catch (error) {
-        console.error('Error starting model:', error)
-        if (
-          error &&
-          typeof error === 'object' &&
-          'message' in error &&
-          typeof error.message === 'string'
-        ) {
-          setModelLoadError({ message: error.message })
-        } else {
-          setModelLoadError(typeof error === 'string' ? error : `${error}`)
-        }
-      } finally {
-        // Remove model from loading state
-        setLoadingModels((prev) => prev.filter((id) => id !== modelId))
-      }
-    }
-  }
+  //       // Refresh active models after starting
+  //       serviceHub
+  //         .models()
+  //         .getActiveModels()
+  //         .then((models) => setActiveModels(models || []))
+  //     } catch (error) {
+  //       console.error('Error starting model:', error)
+  //       if (
+  //         error &&
+  //         typeof error === 'object' &&
+  //         'message' in error &&
+  //         typeof error.message === 'string'
+  //       ) {
+  //         setModelLoadError({ message: error.message })
+  //       } else {
+  //         setModelLoadError(typeof error === 'string' ? error : `${error}`)
+  //       }
+  //     } finally {
+  //       // Remove model from loading state
+  //       setLoadingModels((prev) => prev.filter((id) => id !== modelId))
+  //     }
+  //   }
+  // }
 
-  const handleStopModel = (modelId: string) => {
-    // Original: stopModel(modelId).then(() => { setActiveModels((prevModels) => prevModels.filter((model) => model !== modelId)) })
-    serviceHub
-      .models()
-      .stopModel(modelId)
-      .then(() => {
-        // Refresh active models after stopping
-        serviceHub
-          .models()
-          .getActiveModels()
-          .then((models) => setActiveModels(models || []))
-      })
-      .catch((error) => {
-        console.error('Error stopping model:', error)
-      })
-  }
+  // const handleStopModel = (modelId: string) => {
+  //   // Original: stopModel(modelId).then(() => { setActiveModels((prevModels) => prevModels.filter((model) => model !== modelId)) })
+  //   serviceHub
+  //     .models()
+  //     .stopModel(modelId)
+  //     .then(() => {
+  //       // Refresh active models after stopping
+  //       serviceHub
+  //         .models()
+  //         .getActiveModels()
+  //         .then((models) => setActiveModels(models || []))
+  //     })
+  //     .catch((error) => {
+  //       console.error('Error stopping model:', error)
+  //     })
+  // }
 
   const handleCheckForBackendUpdate = useCallback(async () => {
     if (provider?.provider !== 'llamacpp') return
@@ -559,10 +549,7 @@ function ProviderDetail() {
                                   ...updateObj,
                                 })
 
-                                // Register or update AgnoAgentEngine if API key changed for gamewave-agent
-                                if (provider.provider === 'gamewave-agent' && settingKey === 'api-key' && typeof newValue === 'string' && newValue.trim()) {
-                                  registerAgnoAgent(provider.base_url, newValue)
-                                }
+
 
                                 serviceHub.models().stopAllModels()
                               }

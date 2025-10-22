@@ -1,6 +1,6 @@
 import { AppConfiguration } from '@janhq/core'
 import { invoke } from '@tauri-apps/api/core'
-import { stopAllModels } from './models'
+import { DefaultModelsService } from './models/default'
 
 /**
  * @description This function is used to reset the app to its factory settings.
@@ -9,7 +9,7 @@ import { stopAllModels } from './models'
  */
 export const factoryReset = async () => {
   // Kill background processes and remove data folder
-  await stopAllModels()
+  await new DefaultModelsService().stopAllModels()
   window.localStorage.clear()
   await invoke('factory_reset')
 }

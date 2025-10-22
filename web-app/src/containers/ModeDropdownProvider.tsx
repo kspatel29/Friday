@@ -15,15 +15,22 @@ type DropdownModelProviderProps = {
 // The id needs to be changed based on requirement.
 const PROVIDER_NAME = 'gamewave-agent' // add near top
 
-const ASK_MODEL = { id: 'Ask', label: 'Ask' }
-const AGENT_MODEL = { id: 'Agent', label: 'Agent' }
+const ASK_MODEL = { id: 'ask', label: 'Ask' }
+const AGENT_MODEL = { id: 'agent', label: 'Agent' }
 
 const ModeDropdownProvider = ({
   // useLastUsedModel = false,
 }: DropdownModelProviderProps) => {
-  const { selectModelProvider, selectedModel, registeredEngines } =
+  const { selectModelProvider, selectedModel, registeredEngines, setEngineRegistered } =
     useModelProvider()
   const isEngineReady = registeredEngines[PROVIDER_NAME]
+
+  useEffect(() => {
+    if (!isEngineReady) {
+      setEngineRegistered(PROVIDER_NAME, true)
+    }
+  }, [isEngineReady, setEngineRegistered])
+
   const { updateCurrentThreadModel } = useThreads()
 
   const [open, setOpen] = useState(false)
