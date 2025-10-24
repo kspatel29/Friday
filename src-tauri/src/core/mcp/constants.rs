@@ -8,22 +8,10 @@ pub const MCP_BACKOFF_MULTIPLIER: f64 = 2.0; // Double the delay each time
 
 pub const DEFAULT_MCP_CONFIG: &str = r#"{
   "mcpServers": {
-    "fetch": {
-      "command": "uvx",
-      "args": ["mcp-server-fetch"],
-      "env": {},
-      "active": true
-    },
     "agentic-tools": {
       "command": "npx",
       "args": ["-y", "@pimzino/agentic-tools-mcp", "--claude"],
       "env" : {},
-      "active": true
-    },
-    "blender-mcp": {
-      "command": "uvx",
-      "args": ["blender-mcp"],
-      "env": {},
       "active": true
     },
     "unreal-mcp": {
