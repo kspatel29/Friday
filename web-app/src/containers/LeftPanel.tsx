@@ -9,7 +9,7 @@ import {
   IconTrash,
   IconStar,
   IconMessageFilled,
-// IconAppsFilled,
+  // IconAppsFilled,
   IconX,
   IconSearch,
   IconClipboardSmileFilled,
@@ -50,11 +50,11 @@ const mainMenus = [
     icon: IconCirclePlusFilled,
     route: route.home,
   },
-  {
-    title: 'common:assistants',
-    icon: IconClipboardSmileFilled,
-    route: route.assistant,
-  },
+  // {
+  //   title: 'common:assistants',
+  //   icon: IconClipboardSmileFilled,
+  //   route: route.assistant,
+  // },
   // {
   //   title: 'common:hub',
   //   icon: IconAppsFilled,
@@ -259,7 +259,8 @@ const LeftPanel = () => {
           <div
             className={cn(
               'flex flex-col',
-              Object.keys(downloads).length > 0 || localDownloadingModels.size > 0
+              Object.keys(downloads).length > 0 ||
+                localDownloadingModels.size > 0
                 ? 'h-[calc(100%-200px)]'
                 : 'h-[calc(100%-140px)]'
             )}

@@ -434,7 +434,7 @@ const DropdownModelProvider = ({
       <PopoverContent
         className={cn(
           'w-60 p-0 backdrop-blur-2xl',
-          searchValue.length === 0 && 'h-[320px]'
+          searchValue.length === 0 && 'h-auto'
         )}
         align="start"
         sideOffset={10}
@@ -530,9 +530,11 @@ const DropdownModelProvider = ({
 
                 {/* Regular provider sections */}
                 {Object.entries(groupedItems).map(([providerKey, models]) => {
-                  const providerInfo = providers.find(
-                    (p) => p.provider === providerKey
-                  )
+                  const providerInfo = providers
+                    .filter(
+                      (provider) => provider.provider === 'gamewave-agent'
+                    )
+                    .find((p) => p.provider === providerKey)
 
                   if (!providerInfo) return null
 

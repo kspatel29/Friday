@@ -80,7 +80,7 @@ function ModelProviders() {
                   <span className="text-main-view-fg font-medium text-base">
                     {t('common:modelProviders')}
                   </span>
-                  <Dialog>
+                  {/* <Dialog>
                     <DialogTrigger asChild>
                       <Button
                         variant="link"
@@ -126,64 +126,69 @@ function ModelProviders() {
                         </DialogFooter>
                       </DialogHeader>
                     </DialogContent>
-                  </Dialog>
+                  </Dialog> */}
                 </div>
               }
             >
-              {providers.map((provider, index) => (
-                <CardItem
-                  key={index}
-                  title={
-                    <div className="flex items-center gap-3">
-                      <ProvidersAvatar provider={provider} />
-                      <div>
-                        <h3 className="font-medium">
-                          {getProviderTitle(provider.provider)}
-                        </h3>
-                        <p className="text-xs text-main-view-fg/70">
-                          {provider.models.length} Models
-                        </p>
+              {providers
+                .filter((provider) => provider.provider === 'gamewave-agent')
+                .map((provider, index) => (
+                  <CardItem
+                    key={index}
+                    title={
+                      <div className="flex items-center gap-3">
+                        <ProvidersAvatar provider={provider} />
+                        <div>
+                          <h3 className="font-medium">
+                            {getProviderTitle(provider.provider)}
+                          </h3>
+                          <p className="text-xs text-main-view-fg/70">
+                            {provider.models.length} Models
+                          </p>
+                        </div>
                       </div>
-                    </div>
-                  }
-                  actions={
-                    <div className="flex items-center gap-2">
-                      {provider.active && (
-                        <Button
-                          variant="default"
-                          size="sm"
-                          className="h-6 w-6 p-0 bg-transparent hover:bg-main-view-fg/10 border-none shadow-none"
-                          onClick={() => {
-                            navigate({
-                              to: route.settings.providers,
-                              params: {
-                                providerName: provider.provider,
-                              },
+                    }
+                    actions={
+                      <div className="flex items-center gap-2">
+                        {provider.active && (
+                          <Button
+                            variant="default"
+                            size="sm"
+                            className="h-6 w-6 p-0 bg-transparent hover:bg-main-view-fg/10 border-none shadow-none"
+                            onClick={() => {
+                              navigate({
+                                to: route.settings.providers,
+                                params: {
+                                  providerName: provider.provider,
+                                },
+                              })
+                            }}
+                          >
+                            <IconSettings
+                              className="text-main-view-fg/60"
+                              size={16}
+                            />
+                          </Button>
+                        )}
+                        {/* <Switch
+                          checked={provider.active}
+                          onCheckedChange={async (e) => {
+                            if (
+                              !e &&
+                              provider.provider.toLowerCase() === 'llamacpp'
+                            ) {
+                              await stopAllModels()
+                            }
+                            updateProvider(provider.provider, {
+                              ...provider,
+                              active: e,
                             })
                           }}
-                        >
-                          <IconSettings
-                            className="text-main-view-fg/60"
-                            size={16}
-                          />
-                        </Button>
-                      )}
-                      <Switch
-                        checked={provider.active}
-                        onCheckedChange={async (e) => {
-                          if (!e && provider.provider.toLowerCase() === 'llamacpp') {
-                            await stopAllModels()
-                          }
-                          updateProvider(provider.provider, {
-                            ...provider,
-                            active: e,
-                          })
-                        }}
-                      />
-                    </div>
-                  }
-                />
-              ))}
+                        /> */}
+                      </div>
+                    }
+                  />
+                ))}
             </Card>
           </div>
         </div>

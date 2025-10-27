@@ -46,7 +46,17 @@ const DropdownAssistant = () => {
 
   return (
     <>
-      <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
+      <div className="font-medium gap-1 flex">
+        <span className="shrink-0 w-4 h-4 relative flex items-center justify-center">
+          <AvatarEmoji
+            avatar={selectedAssistant.avatar}
+            imageClassName="object-cover"
+            textClassName="text-sm"
+          />
+        </span>
+        {selectedAssistant?.name || 'FRIDAY'}
+      </div>
+      {/* <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
         <div className="flex items-center justify-between gap-2 bg-main-view-fg/5 py-1 hover:bg-main-view-fg/8 px-2 rounded-sm">
           <DropdownMenuTrigger asChild>
             <button className="font-medium cursor-pointer flex items-center gap-1.5 relative z-20 max-w-40">
@@ -68,10 +78,10 @@ const DropdownAssistant = () => {
           </DropdownMenuTrigger>
           <div
             className={cn(
-              "size-5 relative z-10 flex items-center justify-center rounded transition-all duration-200 ease-in-out",
-              areSettingsHidden 
-                ? "opacity-50 cursor-not-allowed bg-main-view-fg/5" 
-                : "cursor-pointer hover:bg-main-view-fg/10"
+              'size-5 relative z-10 flex items-center justify-center rounded transition-all duration-200 ease-in-out',
+              areSettingsHidden
+                ? 'opacity-50 cursor-not-allowed bg-main-view-fg/5'
+                : 'cursor-pointer hover:bg-main-view-fg/10'
             )}
             onClick={() => {
               if (areSettingsHidden) return
@@ -83,9 +93,15 @@ const DropdownAssistant = () => {
             <IconSettings
               size={16}
               className={cn(
-                areSettingsHidden ? "text-main-view-fg/30" : "text-main-view-fg/50"
+                areSettingsHidden
+                  ? 'text-main-view-fg/30'
+                  : 'text-main-view-fg/50'
               )}
-              title={areSettingsHidden ? "Settings locked for this assistant" : "Edit Assistant"}
+              title={
+                areSettingsHidden
+                  ? 'Settings locked for this assistant'
+                  : 'Edit Assistant'
+              }
             />
             {areSettingsHidden && (
               <div className="absolute -top-1 -right-1 bg-amber-500 text-white text-xs rounded-full size-3 flex items-center justify-center">
@@ -131,18 +147,20 @@ const DropdownAssistant = () => {
                   </div>
                 </DropdownMenuItem>
                 <div className="absolute top-1/2 -translate-y-1/2 right-1">
-                  <div 
+                  <div
                     className={cn(
-                      "size-5 relative z-10 flex items-center justify-center rounded transition-all duration-200 ease-in-out",
-                      isSettingsHidden 
-                        ? "opacity-50 cursor-not-allowed bg-main-view-fg/5" 
-                        : "cursor-pointer hover:bg-main-view-fg/10"
+                      'size-5 relative z-10 flex items-center justify-center rounded transition-all duration-200 ease-in-out',
+                      isSettingsHidden
+                        ? 'opacity-50 cursor-not-allowed bg-main-view-fg/5'
+                        : 'cursor-pointer hover:bg-main-view-fg/10'
                     )}
                   >
                     <IconSettings
                       size={16}
                       className={cn(
-                        isSettingsHidden ? "text-main-view-fg/30" : "text-main-view-fg/50"
+                        isSettingsHidden
+                          ? 'text-main-view-fg/30'
+                          : 'text-main-view-fg/50'
                       )}
                       onClick={() => {
                         if (isSettingsHidden) return
@@ -173,8 +191,8 @@ const DropdownAssistant = () => {
             </span>
           </DropdownMenuItem>
         </DropdownMenuContent>
-      </DropdownMenu>
-      <AddEditAssistant
+      </DropdownMenu> */}
+      {/* <AddEditAssistant
         open={dialogOpen}
         onOpenChange={setDialogOpen}
         editingKey={editingAssistantId}
@@ -192,7 +210,7 @@ const DropdownAssistant = () => {
           setEditingAssistantId(null)
           setDialogOpen(false)
         }}
-      />
+      /> */}
     </>
   )
 }
