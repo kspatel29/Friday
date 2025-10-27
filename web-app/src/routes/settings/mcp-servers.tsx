@@ -308,9 +308,9 @@ function MCPServers() {
                       <h1 className="text-main-view-fg font-medium text-base">
                         {t('mcp-servers:title')}
                       </h1>
-                      <div className="text-xs bg-main-view-fg/10 border border-main-view-fg/20 text-main-view-fg/70 rounded-full py-0.5 px-2">
+                      {/* <div className="text-xs bg-main-view-fg/10 border border-main-view-fg/20 text-main-view-fg/70 rounded-full py-0.5 px-2">
                         <span>{t('mcp-servers:experimental')}</span>
-                      </div>
+                      </div> */}
                     </div>
 
                     {/* <div className="flex items-center gap-0.5">
@@ -333,7 +333,7 @@ function MCPServers() {
                       </div>
                     </div>  */}
                   </div>
-                  <p className="text-sm text-main-view-fg/70 mt-1">
+                  {/* <p className="text-sm text-main-view-fg/70 mt-1">
                     {t('mcp-servers:findMore')}{' '}
                     <a
                       href="https://mcp.so/"
@@ -343,7 +343,7 @@ function MCPServers() {
                     >
                       mcp.so
                     </a>
-                  </p>
+                  </p> */}
                 </div>
               }
             >
