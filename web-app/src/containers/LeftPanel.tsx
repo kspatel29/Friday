@@ -12,7 +12,7 @@ import {
   // IconAppsFilled,
   IconX,
   IconSearch,
-  IconClipboardSmileFilled,
+  // IconClipboardSmileFilled,
 } from '@tabler/icons-react'
 import { route } from '@/constants/routes'
 import ThreadList from './ThreadList'

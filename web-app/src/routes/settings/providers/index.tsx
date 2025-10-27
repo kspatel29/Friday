@@ -7,25 +7,25 @@ import { Card, CardItem } from '@/containers/Card'
 import { useTranslation } from '@/i18n/react-i18next-compat'
 import { useModelProvider } from '@/hooks/useModelProvider'
 import { useNavigate } from '@tanstack/react-router'
-import { IconCirclePlus, IconSettings } from '@tabler/icons-react'
+import { IconSettings } from '@tabler/icons-react'
 import { getProviderTitle } from '@/lib/utils'
 import ProvidersAvatar from '@/containers/ProvidersAvatar'
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog'
-import { Input } from '@/components/ui/input'
-import { Switch } from '@/components/ui/switch'
-import { useCallback, useState } from 'react'
-import { openAIProviderSettings } from '@/consts/providers'
-import cloneDeep from 'lodash/cloneDeep'
-import { toast } from 'sonner'
-import { stopAllModels } from '@/services/models'
+// import {
+//   Dialog,
+//   DialogClose,
+//   DialogContent,
+//   DialogFooter,
+//   DialogHeader,
+//   DialogTitle,
+//   DialogTrigger,
+// } from '@/components/ui/dialog'
+// import { Input } from '@/components/ui/input'
+// import { Switch } from '@/components/ui/switch'
+// import { useCallback, useState } from 'react'
+// import { openAIProviderSettings } from '@/consts/providers'
+// import cloneDeep from 'lodash/cloneDeep'
+// import { toast } from 'sonner'
+// import { stopAllModels } from '@/services/models'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const Route = createFileRoute(route.settings.model_providers as any)({
@@ -34,35 +34,35 @@ export const Route = createFileRoute(route.settings.model_providers as any)({
 
 function ModelProviders() {
   const { t } = useTranslation()
-  const { providers, addProvider, updateProvider } = useModelProvider()
+  const { providers } = useModelProvider()
   const navigate = useNavigate()
-  const [name, setName] = useState('')
+  // const [name, setName] = useState('')
 
-  const createProvider = useCallback(() => {
-    if (
-      providers.some((e) => e.provider.toLowerCase() === name.toLowerCase())
-    ) {
-      toast.error(t('providerAlreadyExists', { name }))
-      return
-    }
-    const newProvider = {
-      provider: name,
-      active: true,
-      models: [],
-      settings: cloneDeep(openAIProviderSettings) as ProviderSetting[],
-      api_key: '',
-      base_url: 'https://api.openai.com/v1',
-    }
-    addProvider(newProvider)
-    setTimeout(() => {
-      navigate({
-        to: route.settings.providers,
-        params: {
-          providerName: name,
-        },
-      })
-    }, 0)
-  }, [providers, name, addProvider, t, navigate])
+  // const createProvider = useCallback(() => {
+  //   if (
+  //     providers.some((e) => e.provider.toLowerCase() === name.toLowerCase())
+  //   ) {
+  //     toast.error(t('providerAlreadyExists', { name }))
+  //     return
+  //   }
+  //   const newProvider = {
+  //     provider: name,
+  //     active: true,
+  //     models: [],
+  //     settings: cloneDeep(openAIProviderSettings) as ProviderSetting[],
+  //     api_key: '',
+  //     base_url: 'https://api.openai.com/v1',
+  //   }
+  //   addProvider(newProvider)
+  //   setTimeout(() => {
+  //     navigate({
+  //       to: route.settings.providers,
+  //       params: {
+  //         providerName: name,
+  //       },
+  //     })
+  //   }, 0)
+  // }, [providers, name, addProvider, t, navigate])
 
   return (
     <div className="flex flex-col h-full">

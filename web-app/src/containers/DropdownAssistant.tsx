@@ -1,48 +1,48 @@
-import { useState } from 'react'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
+// import { useState } from 'react'
+// import {
+//   DropdownMenu,
+//   DropdownMenuContent,
+//   DropdownMenuItem,
+//   DropdownMenuSeparator,
+//   DropdownMenuTrigger,
+// } from '@/components/ui/dropdown-menu'
 import { useAssistant } from '@/hooks/useAssistant'
-import AddEditAssistant from './dialogs/AddEditAssistant'
-import { IconCirclePlus, IconSettings } from '@tabler/icons-react'
-import { useThreads } from '@/hooks/useThreads'
+// import AddEditAssistant from './dialogs/AddEditAssistant'
+// import { IconCirclePlus, IconSettings } from '@tabler/icons-react'
+// import { useThreads } from '@/hooks/useThreads'
 import { AvatarEmoji } from '@/containers/AvatarEmoji'
-import { cn } from '@/lib/utils'
+// import { cn } from '@/lib/utils'
 
 const DropdownAssistant = () => {
   const {
     assistants,
     currentAssistant,
-    addAssistant,
-    updateAssistant,
-    setCurrentAssistant,
+    // addAssistant,
+    // updateAssistant,
+    // setCurrentAssistant,
   } = useAssistant()
-  const { updateCurrentThreadAssistant } = useThreads()
-  const [dropdownOpen, setDropdownOpen] = useState(false)
-  const [dialogOpen, setDialogOpen] = useState(false)
-  const [editingAssistantId, setEditingAssistantId] = useState<string | null>(
-    null
-  )
+  // const { updateCurrentThreadAssistant } = useThreads()
+  // const [dropdownOpen, setDropdownOpen] = useState(false)
+  // const [dialogOpen, setDialogOpen] = useState(false)
+  // const [editingAssistantId, setEditingAssistantId] = useState<string | null>(
+  //   null
+  // )
 
   const selectedAssistant =
     assistants.find((a) => a.id === currentAssistant.id) || assistants[0]
 
   // Check if settings are hidden for the selected assistant
-  const areSettingsHidden = selectedAssistant?.hideSettings === true
+  // const areSettingsHidden = selectedAssistant?.hideSettings === true
 
-  const handleSettingsClick = (assistantId: string) => {
-    const assistant = assistants.find((a) => a.id === assistantId)
-    if (assistant?.hideSettings) {
-      console.warn(`Settings are hidden for assistant: ${assistant.name}`)
-      return
-    }
-    setEditingAssistantId(assistantId)
-    setDialogOpen(true)
-  }
+  // const handleSettingsClick = (assistantId: string) => {
+  //   const assistant = assistants.find((a) => a.id === assistantId)
+  //   if (assistant?.hideSettings) {
+  //     console.warn(`Settings are hidden for assistant: ${assistant.name}`)
+  //     return
+  //   }
+  //   setEditingAssistantId(assistantId)
+  //   setDialogOpen(true)
+  // }
 
   return (
     <>
