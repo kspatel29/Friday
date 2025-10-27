@@ -22,10 +22,10 @@ import { useTranslation } from '@/i18n/react-i18next-compat'
 import Capabilities from '@/containers/Capabilities'
 import { DynamicControllerSetting } from '@/containers/dynamicControllerSetting'
 import { RenderMarkdown } from '@/containers/RenderMarkdown'
-import { DialogEditModel } from '@/containers/dialogs/EditModel'
-import { DialogAddModel } from '@/containers/dialogs/AddModel'
+// import { DialogEditModel } from '@/containers/dialogs/EditModel'
+// import { DialogAddModel } from '@/containers/dialogs/AddModel'
 import { ModelSetting } from '@/containers/ModelSetting'
-import { DialogDeleteModel } from '@/containers/dialogs/DeleteModel'
+// import { DialogDeleteModel } from '@/containers/dialogs/DeleteModel'
 import { FavoriteModelAction } from '@/containers/FavoriteModelAction'
 import Joyride, { CallBackProps, STATUS } from 'react-joyride'
 import { CustomTooltipJoyRide } from '@/containers/CustomeTooltipJoyRide'
@@ -530,7 +530,7 @@ function ProviderDetail() {
                                 </div>
                               </Button>
                             )}
-                            <DialogAddModel provider={provider} />
+                            {/* <DialogAddModel provider={provider} /> */}
                           </>
                         )}
                         {provider && provider.provider === 'llamacpp' && (
@@ -584,12 +584,12 @@ function ProviderDetail() {
                           }
                           actions={
                             <div className="flex items-center gap-0.5">
-                              {provider && provider.provider !== 'llamacpp' && (
+                              {/* {provider && provider.provider !== 'llamacpp' && (
                                 <DialogEditModel
                                   provider={provider}
                                   modelId={model.id}
                                 />
-                              )}
+                              )} */}
                               {model.settings && (
                                 <ModelSetting
                                   provider={provider}
@@ -607,10 +607,10 @@ function ProviderDetail() {
                                   Boolean(provider.api_key?.length))) && (
                                 <FavoriteModelAction model={model} />
                               )}
-                              <DialogDeleteModel
+                              {/* <DialogDeleteModel
                                 provider={provider}
                                 modelId={model.id}
-                              />
+                              /> */}
                               {provider && provider.provider === 'llamacpp' && (
                                 <div className="ml-2">
                                   {activeModels.some(

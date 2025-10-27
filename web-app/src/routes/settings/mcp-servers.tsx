@@ -3,17 +3,17 @@ import { route } from '@/constants/routes'
 import HeaderPage from '@/containers/HeaderPage'
 import SettingsMenu from '@/containers/SettingsMenu'
 import { Card, CardItem } from '@/containers/Card'
-import {
-  IconPencil,
-  IconPlus,
-  IconTrash,
-  IconCodeCircle,
-} from '@tabler/icons-react'
+// import {
+//   IconPencil,
+//   IconPlus,
+//   IconTrash,
+//   IconCodeCircle,
+// } from '@tabler/icons-react'
 import { useMCPServers, MCPServerConfig } from '@/hooks/useMCPServers'
 import { useEffect, useState } from 'react'
-import AddEditMCPServer from '@/containers/dialogs/AddEditMCPServer'
-import DeleteMCPServerConfirm from '@/containers/dialogs/DeleteMCPServerConfirm'
-import EditJsonMCPserver from '@/containers/dialogs/EditJsonMCPserver'
+// import AddEditMCPServer from '@/containers/dialogs/AddEditMCPServer'
+// import DeleteMCPServerConfirm from '@/containers/dialogs/DeleteMCPServerConfirm'
+// import EditJsonMCPserver from '@/containers/dialogs/EditJsonMCPserver'
 import { Switch } from '@/components/ui/switch'
 import { twMerge } from 'tailwind-merge'
 import { getConnectedServers } from '@/services/mcp'
@@ -91,142 +91,142 @@ function MCPServers() {
   const { t } = useTranslation()
   const {
     mcpServers,
-    addServer,
+    // addServer,
     editServer,
-    renameServer,
-    deleteServer,
+    // renameServer,
+    // deleteServer,
     syncServers,
-    syncServersAndRestart,
+    // syncServersAndRestart,
     getServerConfig,
   } = useMCPServers()
   const { allowAllMCPPermissions, setAllowAllMCPPermissions } =
     useToolApproval()
 
-  const [open, setOpen] = useState(false)
-  const [editingKey, setEditingKey] = useState<string | null>(null)
-  const [currentConfig, setCurrentConfig] = useState<
-    MCPServerConfig | undefined
-  >(undefined)
+  // const [open, setOpen] = useState(false)
+  // const [editingKey, setEditingKey] = useState<string | null>(null)
+  // const [currentConfig, setCurrentConfig] = useState<
+  //   MCPServerConfig | undefined
+  // >(undefined)
 
   // Delete confirmation dialog state
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-  const [serverToDelete, setServerToDelete] = useState<string | null>(null)
+  // const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  // const [serverToDelete, setServerToDelete] = useState<string | null>(null)
 
   // JSON editor dialog state
-  const [jsonEditorOpen, setJsonEditorOpen] = useState(false)
-  const [jsonServerName, setJsonServerName] = useState<string | null>(null)
-  const [jsonEditorData, setJsonEditorData] = useState<
-    MCPServerConfig | Record<string, MCPServerConfig> | undefined
-  >(undefined)
+  // const [jsonEditorOpen, setJsonEditorOpen] = useState(false)
+  // const [jsonServerName, setJsonServerName] = useState<string | null>(null)
+  // const [jsonEditorData, setJsonEditorData] = useState<
+  //   MCPServerConfig | Record<string, MCPServerConfig> | undefined
+  // >(undefined)
   const [connectedServers, setConnectedServers] = useState<string[]>([])
   const [loadingServers, setLoadingServers] = useState<{
     [key: string]: boolean
   }>({})
   const { setErrorMessage } = useAppState()
 
-  const handleOpenDialog = (serverKey?: string) => {
-    if (serverKey) {
-      // Edit mode
-      setCurrentConfig(mcpServers[serverKey])
-      setEditingKey(serverKey)
-    } else {
-      // Add mode
-      setCurrentConfig(undefined)
-      setEditingKey(null)
-    }
-    setOpen(true)
-  }
+  // const handleOpenDialog = (serverKey?: string) => {
+  //   if (serverKey) {
+  //     // Edit mode
+  //     setCurrentConfig(mcpServers[serverKey])
+  //     setEditingKey(serverKey)
+  //   } else {
+  //     // Add mode
+  //     setCurrentConfig(undefined)
+  //     setEditingKey(null)
+  //   }
+  //   setOpen(true)
+  // }
 
-  const handleSaveServer = async (name: string, config: MCPServerConfig) => {
-    if (editingKey) {
-      // If server name changed, rename it while preserving position
-      if (editingKey !== name) {
-        toggleServer(editingKey, false)
-        renameServer(editingKey, name, config)
-        toggleServer(name, true)
-        // Restart servers to update tool references with new server name
-        syncServersAndRestart()
-      } else {
-        toggleServer(editingKey, false)
-        editServer(editingKey, config)
-        toggleServer(editingKey, true)
-        syncServers()
-      }
-    } else {
-      // Add new server
-      toggleServer(name, false)
-      addServer(name, config)
-      toggleServer(name, true)
-      syncServers()
-    }
-  }
+  // const handleSaveServer = async (name: string, config: MCPServerConfig) => {
+  //   if (editingKey) {
+  //     // If server name changed, rename it while preserving position
+  //     if (editingKey !== name) {
+  //       toggleServer(editingKey, false)
+  //       renameServer(editingKey, name, config)
+  //       toggleServer(name, true)
+  //       // Restart servers to update tool references with new server name
+  //       syncServersAndRestart()
+  //     } else {
+  //       toggleServer(editingKey, false)
+  //       editServer(editingKey, config)
+  //       toggleServer(editingKey, true)
+  //       syncServers()
+  //     }
+  //   } else {
+  //     // Add new server
+  //     toggleServer(name, false)
+  //     addServer(name, config)
+  //     toggleServer(name, true)
+  //     syncServers()
+  //   }
+  // }
 
-  const handleEdit = (serverKey: string) => {
-    handleOpenDialog(serverKey)
-  }
+  // const handleEdit = (serverKey: string) => {
+  //   handleOpenDialog(serverKey)
+  // }
 
-  const handleDeleteClick = (serverKey: string) => {
-    setServerToDelete(serverKey)
-    setDeleteDialogOpen(true)
-  }
+  // const handleDeleteClick = (serverKey: string) => {
+  //   setServerToDelete(serverKey)
+  //   setDeleteDialogOpen(true)
+  // }
 
-  const handleConfirmDelete = async () => {
-    if (serverToDelete) {
-      // Stop the server before deletion
-      try {
-        await invoke('deactivate_mcp_server', { name: serverToDelete })
-      } catch (error) {
-        console.error('Error stopping server before deletion:', error)
-      }
+  // const handleConfirmDelete = async () => {
+  //   if (serverToDelete) {
+  //     // Stop the server before deletion
+  //     try {
+  //       await invoke('deactivate_mcp_server', { name: serverToDelete })
+  //     } catch (error) {
+  //       console.error('Error stopping server before deletion:', error)
+  //     }
 
-      deleteServer(serverToDelete)
-      setServerToDelete(null)
-      syncServersAndRestart()
-    }
-  }
+  //     deleteServer(serverToDelete)
+  //     setServerToDelete(null)
+  //     syncServersAndRestart()
+  //   }
+  // }
 
-  const handleOpenJsonEditor = async (serverKey?: string) => {
-    if (serverKey) {
-      // Edit single server JSON
-      setJsonServerName(serverKey)
-      setJsonEditorData(mcpServers[serverKey])
-    } else {
-      // Edit all servers JSON
-      setJsonServerName(null)
-      setJsonEditorData(mcpServers)
-    }
-    setJsonEditorOpen(true)
-  }
+  // const handleOpenJsonEditor = async (serverKey?: string) => {
+  //   if (serverKey) {
+  //     // Edit single server JSON
+  //     setJsonServerName(serverKey)
+  //     setJsonEditorData(mcpServers[serverKey])
+  //   } else {
+  //     // Edit all servers JSON
+  //     setJsonServerName(null)
+  //     setJsonEditorData(mcpServers)
+  //   }
+  //   setJsonEditorOpen(true)
+  // }
 
-  const handleSaveJson = async (
-    data: MCPServerConfig | Record<string, MCPServerConfig>
-  ) => {
-    if (jsonServerName) {
-      try {
-        toggleServer(jsonServerName, false)
-      } catch (error) {
-        console.error('Error deactivating server:', error)
-      }
-      // Save single server
-      editServer(jsonServerName, data as MCPServerConfig)
-      toggleServer(jsonServerName, (data as MCPServerConfig).active || false)
-    } else {
-      // Save all servers
-      // Clear existing servers first
-      Object.keys(mcpServers).forEach((serverKey) => {
-        toggleServer(serverKey, false)
-        deleteServer(serverKey)
-      })
+  // const handleSaveJson = async (
+  //   data: MCPServerConfig | Record<string, MCPServerConfig>
+  // ) => {
+  //   if (jsonServerName) {
+  //     try {
+  //       toggleServer(jsonServerName, false)
+  //     } catch (error) {
+  //       console.error('Error deactivating server:', error)
+  //     }
+  //     // Save single server
+  //     editServer(jsonServerName, data as MCPServerConfig)
+  //     toggleServer(jsonServerName, (data as MCPServerConfig).active || false)
+  //   } else {
+  //     // Save all servers
+  //     // Clear existing servers first
+  //     Object.keys(mcpServers).forEach((serverKey) => {
+  //       toggleServer(serverKey, false)
+  //       deleteServer(serverKey)
+  //     })
 
-      // Add all servers from the JSON
-      Object.entries(data as Record<string, MCPServerConfig>).forEach(
-        ([key, config]) => {
-          addServer(key, config)
-          toggleServer(key, config.active || false)
-        }
-      )
-    }
-  }
+  //     // Add all servers from the JSON
+  //     Object.entries(data as Record<string, MCPServerConfig>).forEach(
+  //       ([key, config]) => {
+  //         addServer(key, config)
+  //         toggleServer(key, config.active || false)
+  //       }
+  //     )
+  //   }
+  // }
 
   const toggleServer = (serverKey: string, active: boolean) => {
     if (serverKey) {
@@ -313,7 +313,7 @@ function MCPServers() {
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-0.5">
+                    {/* <div className="flex items-center gap-0.5">
                       <div
                         className="size-6 cursor-pointer flex items-center justify-center rounded hover:bg-main-view-fg/10 transition-all duration-200 ease-in-out"
                         onClick={() => handleOpenJsonEditor()}
@@ -331,7 +331,7 @@ function MCPServers() {
                       >
                         <IconPlus size={18} className="text-main-view-fg/50" />
                       </div>
-                    </div>
+                    </div>  */}
                   </div>
                   <p className="text-sm text-main-view-fg/70 mt-1">
                     {t('mcp-servers:findMore')}{' '}
@@ -442,7 +442,7 @@ function MCPServers() {
                     }
                     actions={
                       <div className="flex items-center gap-0.5">
-                        <div
+                        {/* <div
                           className="size-6 cursor-pointer flex items-center justify-center rounded hover:bg-main-view-fg/10 transition-all duration-200 ease-in-out"
                           onClick={() => handleOpenJsonEditor(key)}
                           title={t('mcp-servers:editJson.title', {
@@ -473,7 +473,7 @@ function MCPServers() {
                             size={18}
                             className="text-main-view-fg/50"
                           />
-                        </div>
+                        </div> */}
                         <div className="ml-2">
                           <Switch
                             checked={config.active}
@@ -494,24 +494,24 @@ function MCPServers() {
       </div>
 
       {/* Use the AddEditMCPServer component */}
-      <AddEditMCPServer
+      {/* <AddEditMCPServer
         open={open}
         onOpenChange={setOpen}
         editingKey={editingKey}
         initialData={currentConfig}
         onSave={handleSaveServer}
-      />
+      /> */}
 
       {/* Delete confirmation dialog */}
-      <DeleteMCPServerConfirm
+      {/* <DeleteMCPServerConfirm
         open={deleteDialogOpen}
         onOpenChange={setDeleteDialogOpen}
         serverName={serverToDelete || ''}
         onConfirm={handleConfirmDelete}
-      />
+      /> */}
 
       {/* JSON editor dialog */}
-      <EditJsonMCPserver
+      {/* <EditJsonMCPserver
         open={jsonEditorOpen}
         onOpenChange={setJsonEditorOpen}
         serverName={jsonServerName}
@@ -519,7 +519,7 @@ function MCPServers() {
           jsonEditorData as MCPServerConfig | Record<string, MCPServerConfig>
         }
         onSave={handleSaveJson}
-      />
+      /> */}
     </div>
   )
 }
