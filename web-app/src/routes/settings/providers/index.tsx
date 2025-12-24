@@ -131,7 +131,7 @@ function ModelProviders() {
               }
             >
               {providers
-                .filter((provider) => provider.provider === 'gamewave-agent')
+                .filter((provider) => provider.provider === 'langgraph')
                 .map((provider, index) => (
                   <CardItem
                     key={index}

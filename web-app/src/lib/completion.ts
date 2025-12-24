@@ -208,45 +208,56 @@ export const sendCompletion = async (
     }
   }
 
+  // For LangGraph provider, update engine configuration from provider settings
+  if (provider.provider === 'langgraph') {
+    const { updateLangGraphConfig } = await import('@/lib/engines/register-langgraph')
+    const assistantIdSetting = provider.settings?.find(s => s.key === 'assistant-id')
+    const assistantId = assistantIdSetting?.controller_props?.value as string || 'agent'
+    const baseUrl = provider.base_url || 'http://localhost:8123'
+    updateLangGraphConfig(baseUrl, provider.api_key, assistantId)
+  }
+
   const engine = ExtensionManager.getInstance().getEngine(provider.provider)
 
   const completion = engine
     ? await engine.chat(
-        {
-          messages: messages as chatCompletionRequestMessage[],
-          model: thread.model?.id,
-          tools: normalizeTools(tools),
-          tool_choice: tools.length ? 'auto' : undefined,
-          stream: true,
-          ...params,
-        },
-        abortController
-      )
+      {
+        messages: messages as chatCompletionRequestMessage[],
+        model: thread.model?.id,
+        tools: normalizeTools(tools),
+        tool_choice: tools.length ? 'auto' : undefined,
+        stream: true,
+        // Pass thread ID for stateful engines like LangGraph
+        threadId: thread.id,
+        ...params,
+      } as any,
+      abortController
+    )
     : stream
       ? await tokenJS.chat.completions.create(
-          {
-            stream: true,
+        {
+          stream: true,
 
-            provider: providerName as any,
-            model: thread.model?.id,
-            messages,
-            tools: normalizeTools(tools),
-            tool_choice: tools.length ? 'auto' : undefined,
-            ...params,
-          },
-          {
-            signal: abortController.signal,
-          }
-        )
-      : await tokenJS.chat.completions.create({
-          stream: false,
-          provider: providerName,
+          provider: providerName as any,
           model: thread.model?.id,
           messages,
           tools: normalizeTools(tools),
           tool_choice: tools.length ? 'auto' : undefined,
           ...params,
-        })
+        },
+        {
+          signal: abortController.signal,
+        }
+      )
+      : await tokenJS.chat.completions.create({
+        stream: false,
+        provider: providerName,
+        model: thread.model?.id,
+        messages,
+        tools: normalizeTools(tools),
+        tool_choice: tools.length ? 'auto' : undefined,
+        ...params,
+      })
   return completion
 }
 
@@ -269,7 +280,7 @@ export const stopModel = async (
 ): Promise<void> => {
   const providerObj = EngineManager.instance().get(provider)
   const modelObj = ModelManager.instance().get(model)
-  if (providerObj && modelObj) return providerObj?.unload(model).then(() => {})
+  if (providerObj && modelObj) return providerObj?.unload(model).then(() => { })
 }
 
 /**
@@ -304,17 +315,23 @@ export const extractToolCall = (
   calls: ChatCompletionMessageToolCall[]
 ) => {
   const deltaToolCalls = part.choices[0].delta.tool_calls
-  // Handle the beginning of a new tool call
-  if (deltaToolCalls?.[0]?.index !== undefined && deltaToolCalls[0]?.function) {
-    const index = deltaToolCalls[0].index
+  if (!deltaToolCalls || deltaToolCalls.length === 0) {
+    return calls
+  }
+
+  // Process ALL tool calls in the chunk, not just the first one
+  for (const deltaToolCall of deltaToolCalls) {
+    if (deltaToolCall?.index === undefined) continue
+    
+    const index = deltaToolCall.index
 
     // Create new tool call if this is the first chunk for it
     if (!calls[index]) {
       calls[index] = {
-        id: deltaToolCalls[0]?.id || ulid(),
+        id: deltaToolCall?.id || ulid(),
         function: {
-          name: deltaToolCalls[0]?.function?.name || '',
-          arguments: deltaToolCalls[0]?.function?.arguments || '',
+          name: deltaToolCall?.function?.name || '',
+          arguments: deltaToolCall?.function?.arguments || '',
         },
         type: 'function',
       }
@@ -325,14 +342,14 @@ export const extractToolCall = (
 
       // Append to function name or arguments if they exist in this chunk
       if (
-        deltaToolCalls[0]?.function?.name &&
-        currentCall!.function.name !== deltaToolCalls[0]?.function?.name
+        deltaToolCall?.function?.name &&
+        currentCall!.function.name !== deltaToolCall?.function?.name
       ) {
-        currentCall!.function.name += deltaToolCalls[0].function.name
+        currentCall!.function.name += deltaToolCall.function.name
       }
 
-      if (deltaToolCalls[0]?.function?.arguments) {
-        currentCall!.function.arguments += deltaToolCalls[0].function.arguments
+      if (deltaToolCall?.function?.arguments) {
+        currentCall!.function.arguments += deltaToolCall.function.arguments
       }
     }
   }
@@ -369,7 +386,7 @@ export const postMessageProcessing = async (
       const toolId = ulid()
       const toolCallsMetadata =
         message.metadata?.tool_calls &&
-        Array.isArray(message.metadata?.tool_calls)
+          Array.isArray(message.metadata?.tool_calls)
           ? message.metadata?.tool_calls
           : []
       message.metadata = {
@@ -401,10 +418,10 @@ export const postMessageProcessing = async (
         approvedTools[message.thread_id]?.includes(toolCall.function.name) ||
         (showModal
           ? await showModal(
-              toolCall.function.name,
-              message.thread_id,
-              toolParameters
-            )
+            toolCall.function.name,
+            message.thread_id,
+            toolParameters
+          )
           : true)
 
       const { promise, cancel } = callToolWithCancellation({
@@ -418,25 +435,25 @@ export const postMessageProcessing = async (
 
       let result = approved
         ? await promise.catch((e) => {
-            console.error('Tool call failed:', e)
-            return {
-              content: [
-                {
-                  type: 'text',
-                  text: `Error calling tool ${toolCall.function.name}: ${e.message ?? e}`,
-                },
-              ],
-              error: true,
-            }
-          })
-        : {
+          console.error('Tool call failed:', e)
+          return {
             content: [
               {
                 type: 'text',
-                text: 'The user has chosen to disallow the tool call.',
+                text: `Error calling tool ${toolCall.function.name}: ${e.message ?? e}`,
               },
             ],
+            error: true,
           }
+        })
+        : {
+          content: [
+            {
+              type: 'text',
+              text: 'The user has chosen to disallow the tool call.',
+            },
+          ],
+        }
 
       if (typeof result === 'string') {
         result = {

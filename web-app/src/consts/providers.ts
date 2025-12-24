@@ -342,17 +342,17 @@ export const predefinedProviders = [
     ],
   },
   {
-    id: 'gamewave-agent',
-    name: 'GameWave Agent',
+    id: 'langgraph-agent',
+    name: 'LangGraph Agent',
     active: true,
     api_key: '',
-    base_url: 'https://mowbjvvzgrerertijhql.supabase.co/functions/v1/friday-agent-proxy',
-    provider: 'gamewave-agent',
+    base_url: 'http://127.0.0.1:2024',
+    provider: 'langgraph',
     settings: [
       {
         key: 'api-key',
         title: 'API Key',
-        description: 'Your Gamewave agent API key',
+        description: 'Your LangGraph/LangSmith API key (optional for local deployment)',
         controller_type: 'input',
         controller_props: {
           placeholder: 'Enter your API key...',
@@ -361,23 +361,35 @@ export const predefinedProviders = [
           input_actions: ['unobscure', 'copy'],
         },
       },
+      {
+        key: 'base-url',
+        title: 'Base URL',
+        description: 'LangGraph server URL. Use http://localhost:8123 for local or your LangSmith deployment URL.',
+        controller_type: 'input',
+        controller_props: {
+          placeholder: 'http://localhost:8123',
+          value: 'http://localhost:8123',
+        },
+      },
+      {
+        key: 'assistant-id',
+        title: 'Assistant ID',
+        description: 'The graph name or assistant ID to use (e.g., "agent")',
+        controller_type: 'input',
+        controller_props: {
+          placeholder: 'agent',
+          value: 'agent',
+        },
+      },
     ],
     models: [
-       {
-        id: 'ask',
-        name: 'ask',
-        version: '1.0',
-        description:
-          'It doesn\'t perform edits in your unreal environment',
-        capabilities: ['completion', 'tools'],
-      },
-       {
+      {
         id: 'agent',
-        name: 'agent',
+        name: 'Deep Agent',
         version: '1.0',
         description:
-          'It can perform actions and edits in your unreal environment',
-        capabilities: ['completion', 'tools'],
+          'Main supervisor agent with PCG, Blueprint, Niagara, and Material subagents. Supports stateful conversations with human-in-the-loop tool execution.',
+        capabilities: ['completion', 'tools', 'stateful'],
       },
     ],
   }

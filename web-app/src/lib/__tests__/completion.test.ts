@@ -186,5 +186,36 @@ describe('completion.ts', () => {
       expect(Array.isArray(result)).toBe(true)
       expect(result.length).toBe(0)
     })
+
+    it('should extract multiple tool calls from a single chunk', () => {
+      const message = {
+        choices: [{
+          delta: {
+            tool_calls: [
+              { 
+                id: 'call_1', 
+                type: 'function', 
+                index: 0,
+                function: { name: 'tool_a', arguments: '{"arg": "value1"}' } 
+              },
+              { 
+                id: 'call_2', 
+                type: 'function', 
+                index: 1,
+                function: { name: 'tool_b', arguments: '{"arg": "value2"}' } 
+              }
+            ]
+          }
+        }]
+      }
+      const calls: any[] = []
+      const result = extractToolCall(message as any, null, calls)
+      expect(Array.isArray(result)).toBe(true)
+      expect(result.length).toBe(2)
+      expect(result[0].id).toBe('call_1')
+      expect(result[0].function.name).toBe('tool_a')
+      expect(result[1].id).toBe('call_2')
+      expect(result[1].function.name).toBe('tool_b')
+    })
   })
 })

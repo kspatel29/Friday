@@ -10,7 +10,7 @@ import { fetch as fetchTauri } from '@tauri-apps/plugin-http'
 export const getProviders = async (): Promise<ModelProvider[]> => {
   const builtinProviders = predefinedProviders.map((provider) => {
     let models = provider.models as Model[]
-    if (Object.keys(providerModels).includes(provider.provider)) {
+    if (Object.keys(providerModels).includes(provider.provider) && provider.provider !== 'langgraph') {
       const builtInModels = providerModels[
         provider.provider as unknown as keyof typeof providerModels
       ].models as unknown as string[]
@@ -44,11 +44,11 @@ export const getProviders = async (): Promise<ModelProvider[]> => {
 
   const runtimeProviders: ModelProvider[] = []
   for (const [providerName, value] of EngineManager.instance().engines) {
-    // Skip llamacpp provider
-    if (providerName === 'llamacpp') {
+    // Skip llamacpp and langgraph providers - they are defined in predefinedProviders
+    if (providerName === 'llamacpp' || providerName === 'langgraph') {
       continue;
     }
-    
+
     const models = (await fetchModels()) ?? []
     const provider: ModelProvider = {
       active: false,

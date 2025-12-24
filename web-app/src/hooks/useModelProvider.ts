@@ -110,8 +110,8 @@ export const useModelProvider = create<ModelProviderState>()(
                 const existingSetting = provider.persist
                   ? undefined
                   : existingProvider?.settings?.find(
-                      (x) => x.key === setting.key
-                    )
+                    (x) => x.key === setting.key
+                  )
                 return {
                   ...setting,
                   controller_props: {
@@ -275,9 +275,16 @@ export const useModelProvider = create<ModelProviderState>()(
           })
         }
 
+        // Version 1->2: Remove obsolete gamewave-agent provider (replaced by langgraph)
+        if (state?.providers) {
+          state.providers = state.providers.filter(
+            (provider) => provider.provider !== 'gamewave-agent'
+          )
+        }
+
         return state
       },
-      version: 1,
+      version: 2,
     }
   )
 )

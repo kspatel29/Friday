@@ -43,6 +43,8 @@ export const getProviderTitle = (provider: string) => {
       return 'Gemini'
     case 'huggingface':
       return 'Hugging Face'
+    case 'langgraph':
+      return 'LangGraph Agent'
     default:
       return provider.charAt(0).toUpperCase() + provider.slice(1)
   }

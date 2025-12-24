@@ -10,7 +10,7 @@ import { localStorageKey } from '@/constants/localStorage'
 function SetupScreen() {
   const { t } = useTranslation()
   // const { providers } = useModelProvider()
-  const firstItemRemoteProvider = 'gamewave-agent'
+  const firstItemRemoteProvider = 'langgraph'
 
   // Check if setup tour has been completed
   const isSetupCompleted =

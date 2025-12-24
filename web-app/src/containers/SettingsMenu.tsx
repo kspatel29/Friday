@@ -158,13 +158,13 @@ const SettingsMenu = () => {
                 <div className="ml-2 mt-1 space-y-1 first-step-setup-remote-provider">
                   {activeProviders
                     .filter(
-                      (provider) => provider.provider === 'gamewave-agent'
+                      (provider) => provider.provider === 'langgraph'
                     )
                     .map((provider) => {
                       const isActive = matches.some(
                         (match) =>
                           match.routeId ===
-                            '/settings/providers/$providerName' &&
+                          '/settings/providers/$providerName' &&
                           'providerName' in match.params &&
                           match.params.providerName === provider.provider
                       )
@@ -175,10 +175,10 @@ const SettingsMenu = () => {
                             className={cn(
                               'flex px-2 items-center gap-1.5 cursor-pointer hover:bg-main-view-fg/5 py-1 w-full rounded [&.active]:bg-main-view-fg/5 text-main-view-fg/80',
                               isActive && 'bg-main-view-fg/5',
-                              // hidden for llama.cpp provider for setup remote provider
-                              provider.provider === 'gamewave-agent' &&
-                                stepSetupRemoteProvider &&
-                                'hidden'
+                              // hidden for langgraph provider during setup remote provider
+                              provider.provider === 'langgraph' &&
+                              stepSetupRemoteProvider &&
+                              'hidden'
                             )}
                             onClick={() =>
                               navigate({
@@ -188,8 +188,8 @@ const SettingsMenu = () => {
                                 },
                                 ...(stepSetupRemoteProvider
                                   ? {
-                                      search: { step: 'setup_remote_provider' },
-                                    }
+                                    search: { step: 'setup_remote_provider' },
+                                  }
                                   : {}),
                               })
                             }

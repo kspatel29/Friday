@@ -498,7 +498,7 @@ const DropdownModelProvider = ({
                             'mx-1 mb-1 px-2 py-1.5 rounded-sm cursor-pointer flex items-center gap-2 transition-all duration-200',
                             'hover:bg-main-view-fg/4',
                             isSelected &&
-                              'bg-main-view-fg/8 hover:bg-main-view-fg/8'
+                            'bg-main-view-fg/8 hover:bg-main-view-fg/8'
                           )}
                         >
                           <div className="flex items-center gap-1 flex-1 min-w-0">
@@ -532,7 +532,7 @@ const DropdownModelProvider = ({
                 {Object.entries(groupedItems).map(([providerKey, models]) => {
                   const providerInfo = providers
                     .filter(
-                      (provider) => provider.provider === 'gamewave-agent'
+                      (provider) => provider.provider === 'langgraph'
                     )
                     .find((p) => p.provider === providerKey)
 
@@ -578,7 +578,7 @@ const DropdownModelProvider = ({
                           const isSelected =
                             selectedModel?.id === searchableModel.model.id &&
                             selectedProvider ===
-                              searchableModel.provider.provider
+                            searchableModel.provider.provider
                           const capabilities =
                             searchableModel.model.capabilities || []
 
@@ -591,7 +591,7 @@ const DropdownModelProvider = ({
                                 'mx-1 mb-1 px-2 py-1.5 rounded-sm cursor-pointer flex items-center gap-2 transition-all duration-200',
                                 'hover:bg-main-view-fg/4',
                                 isSelected &&
-                                  'bg-main-view-fg/8 hover:bg-main-view-fg/8'
+                                'bg-main-view-fg/8 hover:bg-main-view-fg/8'
                               )}
                             >
                               <div className="flex items-center gap-2 flex-1 min-w-0">
