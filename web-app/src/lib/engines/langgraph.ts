@@ -204,7 +204,8 @@ export class LangGraphEngine extends AIEngine {
                 // Check for pending interrupts
                 if (thread.status === 'interrupted') {
                     const interrupts = Object.values(thread.interrupts).flat()
-                    context.pendingInterrupts = interrupts.map(i => parseInterrupt(i))
+                    // parseInterrupt returns an array (for batched tools), so we need to flatten
+                    context.pendingInterrupts = interrupts.flatMap(i => parseInterrupt(i))
                     console.log('Refreshed pending interrupts from server:', context.pendingInterrupts.length)
                 }
             } catch (error) {
@@ -341,15 +342,31 @@ export class LangGraphEngine extends AIEngine {
         console.log('Pending interrupts:', context.pendingInterrupts)
 
         // Match tool results to interrupts by tool call ID
-        const resumeCommands: Array<{ interrupt_id: string; value: unknown }> = []
+        // IMPORTANT: Deduplicate by toolCallId to prevent duplicate resume commands
+        // This can happen due to React Strict Mode re-renders or state accumulation
+        const resumeCommands: Array<{ 
+            interrupt_id: string
+            tool_call_id: string
+            value: unknown
+            isBatched: boolean 
+        }> = []
         const matchedToolCallIds = new Set<string>()
         
         for (const toolResult of toolResults) {
+            // Skip if we've already processed this tool call ID (deduplication)
+            if (matchedToolCallIds.has(toolResult.toolCallId)) {
+                console.log('Skipping duplicate tool result for:', toolResult.toolCallId)
+                continue
+            }
+            
             const matchingInterrupt = context.pendingInterrupts.find(
                 i => i.toolCallId === toolResult.toolCallId
             )
             
             if (matchingInterrupt) {
+                // Mark as matched BEFORE adding to prevent duplicates
+                matchedToolCallIds.add(toolResult.toolCallId)
+                
                 // Parse the result if it's JSON
                 let value: unknown
                 try {
@@ -360,14 +377,16 @@ export class LangGraphEngine extends AIEngine {
                 
                 resumeCommands.push({
                     interrupt_id: matchingInterrupt.interruptId,
-                    value
+                    tool_call_id: matchingInterrupt.toolCallId,
+                    value,
+                    isBatched: matchingInterrupt.isBatched || false
                 })
-                matchedToolCallIds.add(toolResult.toolCallId)
                 
                 console.log('Matched tool result to interrupt:', {
                     toolCallId: toolResult.toolCallId,
                     interruptId: matchingInterrupt.interruptId,
-                    toolName: matchingInterrupt.toolName
+                    toolName: matchingInterrupt.toolName,
+                    isBatched: matchingInterrupt.isBatched
                 })
             } else {
                 console.warn('No matching interrupt found for tool call:', toolResult.toolCallId)
@@ -433,18 +452,67 @@ export class LangGraphEngine extends AIEngine {
 
         // Build the resume payload
         // The `command` field is a single Command object with { resume, update, goto } fields
-        // For multiple interrupts, the `resume` value is a DICT mapping interrupt_id to value
-        // For single interrupt, `resume` can be just the value directly
-        // Reference: LangGraph API OpenAPI schema - Command has resume: Any (object|array|number|string|boolean|null)
+        // 
+        // IMPORTANT: The resume format depends on the scenario:
+        // - Single tool (non-batched): { resume: value }
+        // - Batched tools (multiple tools from ONE interrupt): 
+        //   { resume: { [interrupt_id]: { [tool_call_id_1]: value1, [tool_call_id_2]: value2 } } }
+        // - Multiple separate interrupts with single tool each: { resume: { [interrupt_id]: value, ... } }
+        // - Multiple interrupts with batched tools: 
+        //   { resume: { [interrupt_id_1]: { [tool_call_id]: value }, [interrupt_id_2]: { [tool_call_id]: value } } }
+        //
+        // Reference: Tested against live LangGraph API
         
         let commandValue: unknown
-        if (pendingCount === 1 && resumeCommands.length === 1) {
-            // Single interrupt - resume is just the value
+        
+        // Group resume commands by interrupt_id
+        const commandsByInterrupt = new Map<string, typeof resumeCommands>()
+        for (const cmd of resumeCommands) {
+            const existing = commandsByInterrupt.get(cmd.interrupt_id) || []
+            existing.push(cmd)
+            commandsByInterrupt.set(cmd.interrupt_id, existing)
+        }
+        
+        const uniqueInterruptIds = Array.from(commandsByInterrupt.keys())
+        const hasBatchedTools = resumeCommands.some(cmd => cmd.isBatched)
+        // It's batched if any interrupt has multiple tools OR any tool is marked as batched
+        const hasMultipleToolsPerInterrupt = Array.from(commandsByInterrupt.values()).some(cmds => cmds.length > 1)
+        const isBatched = hasBatchedTools || hasMultipleToolsPerInterrupt
+        
+        console.log('Resume analysis:', {
+            uniqueInterruptIds,
+            isBatched,
+            hasBatchedTools,
+            hasMultipleToolsPerInterrupt,
+            resumeCommandsCount: resumeCommands.length,
+            commandsPerInterrupt: Object.fromEntries(
+                Array.from(commandsByInterrupt.entries()).map(([k, v]) => [k, v.length])
+            )
+        })
+        
+        if (resumeCommands.length === 1 && !hasBatchedTools) {
+            // Single interrupt with single tool - resume is just the value
             commandValue = {
                 resume: resumeCommands[0].value
             }
+            console.log('Using single value resume format')
+        } else if (isBatched) {
+            // Batched tools - resume is a nested dict grouped by interrupt_id:
+            // { [interrupt_id_1]: { [tool_call_id_1]: value1, ... }, [interrupt_id_2]: { ... } }
+            const resumeDict: Record<string, Record<string, unknown>> = {}
+            for (const [interruptId, cmds] of commandsByInterrupt) {
+                const toolResultsDict: Record<string, unknown> = {}
+                for (const cmd of cmds) {
+                    toolResultsDict[cmd.tool_call_id] = cmd.value
+                }
+                resumeDict[interruptId] = toolResultsDict
+            }
+            commandValue = {
+                resume: resumeDict
+            }
+            console.log('Using batched resume format: { interrupt_id: { tool_call_id: value } }')
         } else {
-            // Multiple interrupts - resume is a dict mapping interrupt_id to value
+            // Multiple separate interrupts with single tool each - resume is a dict mapping interrupt_id to value
             const resumeDict: Record<string, unknown> = {}
             for (const cmd of resumeCommands) {
                 resumeDict[cmd.interrupt_id] = cmd.value
@@ -452,6 +520,7 @@ export class LangGraphEngine extends AIEngine {
             commandValue = {
                 resume: resumeDict
             }
+            console.log('Using multiple interrupts resume format')
         }
 
         console.log('Command payload:', JSON.stringify(commandValue, null, 2))
@@ -471,7 +540,12 @@ export class LangGraphEngine extends AIEngine {
     }
 
     // Storage for partial tool results when waiting for multiple interrupt resolutions
-    private partialToolResults?: Map<string, Array<{ interrupt_id: string; value: unknown }>>
+    private partialToolResults?: Map<string, Array<{ 
+        interrupt_id: string
+        tool_call_id: string
+        value: unknown
+        isBatched: boolean 
+    }>>
 
     /**
      * Create an async generator that signals we're waiting for more tool results
@@ -628,16 +702,20 @@ export class LangGraphEngine extends AIEngine {
                                     if (interruptArray.length > 0) {
                                         isInterrupted = true
                                         // Accumulate interrupts instead of overwriting
-                                        const newInterrupts = (interruptArray as (InterruptData | LangGraphInterruptItem)[]).map(i => parseInterrupt(i))
+                                        // parseInterrupt returns an array (for batched tools), so we flatMap
+                                        const newInterrupts = (interruptArray as (InterruptData | LangGraphInterruptItem)[]).flatMap(i => parseInterrupt(i))
                                         for (const newInt of newInterrupts) {
-                                            // Only add if not already present (by interruptId)
-                                            if (!interrupts.some(existing => existing.interruptId === newInt.interruptId)) {
+                                            // Only add if not already present (by interruptId + toolCallId combo)
+                                            if (!interrupts.some(existing => 
+                                                existing.interruptId === newInt.interruptId && 
+                                                existing.toolCallId === newInt.toolCallId
+                                            )) {
                                                 interrupts.push(newInt)
                                             }
                                         }
                                         context.pendingInterrupts = interrupts
                                         context.status = 'interrupted'
-                                        console.log('Detected interrupts from stream:', newInterrupts.map(i => ({ name: i.toolName, interruptId: i.interruptId })))
+                                        console.log('Detected interrupts from stream:', newInterrupts.map(i => ({ name: i.toolName, interruptId: i.interruptId, toolCallId: i.toolCallId })))
                                         console.log('Total accumulated interrupts:', interrupts.length)
                                     }
                                 }
@@ -665,7 +743,8 @@ export class LangGraphEngine extends AIEngine {
                     const thread = await this.fetchThread(context.langGraphThreadId)
                     if (thread.interrupts) {
                         const interruptList = Object.values(thread.interrupts).flat() as (InterruptData | LangGraphInterruptItem)[]
-                        interrupts = interruptList.map(i => parseInterrupt(i))
+                        // parseInterrupt returns an array (for batched tools), so we flatMap
+                        interrupts = interruptList.flatMap(i => parseInterrupt(i))
                         console.log('Fetched interrupts from thread:', interrupts)
                     }
                 } catch (err) {
@@ -819,15 +898,23 @@ export class LangGraphEngine extends AIEngine {
 
     /**
      * Extract tool results from messages (for resuming interrupted runs)
+     * Deduplicates by toolCallId to prevent duplicate results from React re-renders
      */
     private extractToolResults(messages: chatCompletionRequest['messages']): Array<{ toolCallId: string; result: string }> {
+        const seenToolCallIds = new Set<string>()
         return (messages || [])
             .filter(msg => msg.role === 'tool')
             .map(msg => ({
                 toolCallId: (msg as { tool_call_id?: string }).tool_call_id || '',
                 result: typeof msg.content === 'string' ? msg.content : JSON.stringify(msg.content)
             }))
-            .filter(r => r.toolCallId)
+            .filter(r => {
+                if (!r.toolCallId || seenToolCallIds.has(r.toolCallId)) {
+                    return false
+                }
+                seenToolCallIds.add(r.toolCallId)
+                return true
+            })
     }
 
     /**

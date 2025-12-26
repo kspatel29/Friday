@@ -59,10 +59,11 @@ export interface InterruptData {
  */
 export interface ParsedInterrupt {
     interruptId: string  // The LangGraph interrupt ID (for resuming)
-    toolCallId: string
+    toolCallId: string   // The tool_call_id (used as key in resume for batched tools)
     toolName: string
     arguments: Record<string, unknown>
     metadata?: Record<string, unknown>
+    isBatched?: boolean  // True if this tool came from a batched interrupt (Option A)
 }
 
 // =============================================================================
@@ -262,23 +263,53 @@ export type StreamEvent =
 
 /**
  * Interrupt item wrapper from LangGraph
+ * 
+ * Option A (batched): value is an ARRAY of tools from a single agent
+ * Option B (parallel): value is a single tool object
  */
 export interface LangGraphInterruptItem {
-    value: InterruptData
+    value: InterruptData | InterruptData[]  // Can be single tool or array of tools (batched)
+    id?: string  // The interrupt ID for resuming
     [key: string]: unknown
 }
 
 /**
  * Parse interrupt data into a more usable format
+ * 
+ * Handles both:
+ * - Option A (batched): Single interrupt with array of tools → returns array of ParsedInterrupt
+ * - Option B (parallel/legacy): Single interrupt with single tool → returns array with one ParsedInterrupt
+ * 
+ * @returns Array of ParsedInterrupt (always an array for consistent handling)
  */
-export function parseInterrupt(interrupt: InterruptData | LangGraphInterruptItem): ParsedInterrupt {
-    // Handle the nested structure from LangGraph: { value: InterruptData, id: string }
+export function parseInterrupt(interrupt: InterruptData | LangGraphInterruptItem): ParsedInterrupt[] {
+    // Handle the nested structure from LangGraph: { value: InterruptData | InterruptData[], id: string }
     const payload = 'value' in interrupt ? interrupt.value : interrupt
     const interruptId = 'id' in interrupt && typeof interrupt.id === 'string' ? interrupt.id : ''
     
     console.log('parseInterrupt input:', JSON.stringify(interrupt, null, 2))
     console.log('parseInterrupt payload:', JSON.stringify(payload, null, 2))
     console.log('parseInterrupt interruptId:', interruptId)
+
+    // Option A: Batched tools - payload is an array of tools
+    if (Array.isArray(payload)) {
+        console.log('parseInterrupt: Detected batched tools (Option A), count:', payload.length)
+        const results: ParsedInterrupt[] = payload.map((tool: InterruptData) => ({
+            interruptId,  // Same interrupt ID for all tools in the batch
+            toolCallId: tool.id,  // Each tool has its own tool_call_id
+            toolName: tool.function.name,
+            arguments: typeof tool.function.arguments === 'string'
+                ? JSON.parse(tool.function.arguments)
+                : tool.function.arguments,
+            metadata: tool.metadata,
+            isBatched: true,  // Flag to indicate this came from a batched interrupt
+        }))
+        console.log('parseInterrupt batched results:', JSON.stringify(results, null, 2))
+        return results
+    }
+
+    // Option B: Single tool (legacy or parallel agents)
+    console.log('parseInterrupt: Detected single tool (Option B)')
     console.log('parseInterrupt payload.metadata:', payload.metadata)
 
     const result: ParsedInterrupt = {
@@ -288,11 +319,12 @@ export function parseInterrupt(interrupt: InterruptData | LangGraphInterruptItem
         arguments: typeof payload.function.arguments === 'string'
             ? JSON.parse(payload.function.arguments)
             : payload.function.arguments,
-        metadata: payload.metadata
+        metadata: payload.metadata,
+        isBatched: false,
     }
     
-    console.log('parseInterrupt result:', JSON.stringify(result, null, 2))
-    return result
+    console.log('parseInterrupt single result:', JSON.stringify(result, null, 2))
+    return [result]
 }
 
 /**

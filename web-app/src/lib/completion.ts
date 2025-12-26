@@ -381,8 +381,20 @@ export const postMessageProcessing = async (
 ) => {
   // Handle completed tool calls
   if (calls.length) {
+    // Deduplicate tool calls by ID to prevent duplicate execution
+    // This can happen due to React Strict Mode re-renders or state accumulation
+    const processedToolCallIds = new Set<string>()
+    
     for (const toolCall of calls) {
       if (abortController.signal.aborted) break
+      
+      // Skip if we've already processed this tool call ID
+      if (processedToolCallIds.has(toolCall.id)) {
+        console.log('Skipping duplicate tool call:', toolCall.id, toolCall.function.name)
+        continue
+      }
+      processedToolCallIds.add(toolCall.id)
+      
       const toolId = ulid()
       const toolCallsMetadata =
         message.metadata?.tool_calls &&
